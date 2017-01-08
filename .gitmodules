@@ -1,0 +1,6 @@
+[submodule "2017Robot"]
+	path = 2017Robot
+	url = https://github.com/FRC830/2017Robot
+[submodule "Lib830"]
+	path = Lib830
+	url = https://github.com/FRC830/Lib830.git
