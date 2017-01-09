@@ -1,20 +1,30 @@
 #include "WPILib.h"
+#include "CameraServer.h"
 
 class Robot: public IterativeRobot
 {
 private:
+	enum AutoMode {ONE, TWO, THREE};
+
+	CameraServer * camera;
 	LiveWindow *lw = LiveWindow::GetInstance();
-	SendableChooser *chooser;
+	SendableChooser<AutoMode*> *chooser;
 	const std::string autoNameDefault = "Default";
 	const std::string autoNameCustom = "My Auto";
 	std::string autoSelected;
 
+
+
 	void RobotInit()
 	{
-		chooser = new SendableChooser();
-		chooser->AddDefault(autoNameDefault, (void*)&autoNameDefault);
-		chooser->AddObject(autoNameCustom, (void*)&autoNameCustom);
+		chooser = new SendableChooser<AutoMode*>();
+		chooser->AddDefault(autoNameDefault, new AutoMode(ONE));
+		chooser->AddObject(autoNameCustom, new AutoMode(TWO));
 		SmartDashboard::PutData("Auto Modes", chooser);
+		camera = CameraServer::GetInstance();
+
+		camera->StartAutomaticCapture();
+
 	}
 
 
@@ -47,6 +57,8 @@ private:
 		} else {
 			//Default Auto goes here
 		}
+
+		camera->StartAutomaticCapture();
 	}
 
 	void TeleopInit()
