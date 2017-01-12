@@ -1,31 +1,93 @@
 #include "WPILib.h"
 #include "CameraServer.h"
+#include <GripPipeline.h>
+#include <vision/VisionRunner.h>
+#include "vision/VisionPipeline.h"
+#include "thread"
 
-class Robot: public IterativeRobot
-{
+
+class Robot: public IterativeRobot {
+
 private:
 	enum AutoMode {ONE, TWO, THREE};
 
-	CameraServer * camera;
 	LiveWindow *lw = LiveWindow::GetInstance();
+
+	//VisionRunner<grip::GripPipeline> * runner;
+	//frc::VisionPipeline * v_pipeline;
+
+	//grip::GripPipeline * pipeline;
 	SendableChooser<AutoMode*> *chooser;
 	const std::string autoNameDefault = "Default";
 	const std::string autoNameCustom = "My Auto";
 	std::string autoSelected;
 
 
+	static void CameraPeriodic()
+	{
+		CameraServer * server;
+		grip::GripPipeline * pipeline;
+
+		pipeline = new grip::GripPipeline();
+
+		cs::UsbCamera camera;
+		cv::Mat image;
+		cv::Mat image_temp;
+		cv::Mat hsl_output;
+		int g_frame = 0;
+
+		cs::CvSink sink;
+		cs::CvSource outputStream;
+		double hue[] = {0.0, 37.16723549488058};
+		double sat[] = {137.58992805755395, 255.0};
+		double lum[] = {59.62230215827338, 255.0};
+
+		server = CameraServer::GetInstance();
+
+		server->StartAutomaticCapture().SetResolution(640,480);
+
+		sink = server->GetVideo();
+		outputStream = server->PutVideo("Processed", 400, 400);
+
+		while(1) {
+			bool working = sink.GrabFrame(image_temp);
+			SmartDashboard::PutBoolean("working", working);
+
+			if (working) {
+				g_frame ++;
+				image = image_temp;
+			}
+			if (g_frame < 1) {
+				continue;
+			}
+
+			//cvtColor(image, grey, CV_RGB2GRAY);
+
+			pipeline->hslThreshold(image, hue, sat, lum, hsl_output);
+
+			outputStream.PutFrame(hsl_output);
+		}
+
+
+	}
 
 	void RobotInit()
 	{
 		chooser = new SendableChooser<AutoMode*>();
+		//runner = new VisionRunner();
 		chooser->AddDefault(autoNameDefault, new AutoMode(ONE));
 		chooser->AddObject(autoNameCustom, new AutoMode(TWO));
 		SmartDashboard::PutData("Auto Modes", chooser);
-		camera = CameraServer::GetInstance();
 
-		camera->StartAutomaticCapture();
+
+		//outputStream = server->PutVideo("Processed", 400, 400 );
+		std::thread visionThread(CameraPeriodic);
+		visionThread.detach();
+
+
 
 	}
+
 
 
 	/**
@@ -58,19 +120,22 @@ private:
 			//Default Auto goes here
 		}
 
-		camera->StartAutomaticCapture();
 	}
 
 	void TeleopInit()
 	{
-
+		//std::thread visionThread();
+		//visionThread.detach();
 	}
 
 	void TeleopPeriodic()
 	{
+		//pipeline-> Process(hsl_output);
+		//outputStream.PutFrame(hsl_output);
+		//server->GetVideo();
+
 
 	}
-
 	void TestPeriodic()
 	{
 		lw->Run();
