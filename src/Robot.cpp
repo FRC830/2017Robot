@@ -4,6 +4,7 @@
 #include <vision/VisionRunner.h>
 #include "vision/VisionPipeline.h"
 #include "thread"
+#include "unistd.h"
 
 
 class Robot: public IterativeRobot {
@@ -44,7 +45,7 @@ private:
 
 		server = CameraServer::GetInstance();
 
-		server->StartAutomaticCapture().SetResolution(640,480);
+		server->StartAutomaticCapture().SetResolution(320,240);
 
 		sink = server->GetVideo();
 		outputStream = server->PutVideo("Processed", 400, 400);
@@ -63,10 +64,15 @@ private:
 
 			//cvtColor(image, grey, CV_RGB2GRAY);
 
-			pipeline->hslThreshold(image, hue, sat, lum, hsl_output);
+			//pipeline->hslThreshold(image, hue, sat, lum, hsl_output);
+			pipeline->Process(image);
+			outputStream.PutFrame(*pipeline->gethslThresholdOutput());
 
-			outputStream.PutFrame(hsl_output);
+			usleep(500000);
 		}
+
+
+		//hue = SmartDashboard::GetNumber("P:", 0.075);
 
 
 	}
