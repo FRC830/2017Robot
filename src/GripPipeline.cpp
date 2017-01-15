@@ -23,9 +23,9 @@ void GripPipeline::Process(cv::Mat &source0){
 	//Step HSL_Threshold0:
 	//input
 	cv::Mat hslThresholdInput = source0;
-	double hslThresholdHue[] = {0.0, 37.16723549488058};
-	double hslThresholdSaturation[] = {137.58992805755395, 255.0};
-	double hslThresholdLuminance[] = {59.62230215827338, 255.0};
+	double hslThresholdHue[] = {0.0, 35.46295276890901};
+	double hslThresholdSaturation[] = {222.43705035971223, 255.0};
+	double hslThresholdLuminance[] = {217.85071942446044, 255.0};
 	hslThreshold(hslThresholdInput, hslThresholdHue, hslThresholdSaturation, hslThresholdLuminance, this->hslThresholdOutput);
 	//Step Find_Contours0:
 	//input
