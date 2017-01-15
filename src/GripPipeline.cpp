@@ -32,6 +32,11 @@ void GripPipeline::Process(cv::Mat &source0){
 	cv::Mat findContoursInput = hslThresholdOutput;
 	bool findContoursExternalOnly = true;  // default Boolean
 	findContours(findContoursInput, findContoursExternalOnly, this->findContoursOutput);
+
+
+	cv::Mat drawOutputContours = hslThresholdOutput;
+	cv::Scalar color(255,255,255);
+	DrawContours(drawOutputContours,findContoursOutput,-1, color);
 }
 
 /**
@@ -55,6 +60,7 @@ cv::Mat* GripPipeline::gethslThresholdOutput(){
 std::vector<std::vector<cv::Point> >* GripPipeline::getfindContoursOutput(){
 	return &(this->findContoursOutput);
 }
+
 	/**
 	 * Segment an image based on hue, saturation, and luminance ranges.
 	 *
@@ -83,6 +89,10 @@ std::vector<std::vector<cv::Point> >* GripPipeline::getfindContoursOutput(){
 		int mode = externalOnly ? cv::RETR_EXTERNAL : cv::RETR_LIST;
 		int method = cv::CHAIN_APPROX_SIMPLE;
 		cv::findContours(input, contours, hierarchy, mode, method);
+	}
+
+	void GripPipeline::DrawContours(cv::Mat &imageOutput, std::vector<std::vector<cv::Point>> &points, int idx, const cv::Scalar &color) {
+		cv::drawContours(imageOutput, points, idx, color);
 	}
 
 

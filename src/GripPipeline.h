@@ -40,6 +40,7 @@ class GripPipeline {
 		std::vector<std::vector<cv::Point> >* getfindContoursOutput();
 		void hslThreshold(cv::Mat &, double [], double [], double [], cv::Mat &);
 		void findContours(cv::Mat &, bool , std::vector<std::vector<cv::Point> > &);
+		void DrawContours(cv::Mat &imageOutput, std::vector<std::vector<cv::Point>> &points, int idx, const cv::Scalar &color);
 
 	private:
 			cv::Mat hslThresholdOutput;
