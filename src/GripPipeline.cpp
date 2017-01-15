@@ -33,10 +33,38 @@ void GripPipeline::Process(cv::Mat &source0){
 	bool findContoursExternalOnly = true;  // default Boolean
 	findContours(findContoursInput, findContoursExternalOnly, this->findContoursOutput);
 
+	//cv::Mat drawOutputContours = source0;
+	cv::Scalar color(255,128,0);
+	std::sort(findContoursOutput.begin(), findContoursOutput.end(), FindContourArea);
 
-	cv::Mat drawOutputContours = hslThresholdOutput;
-	cv::Scalar color(255,255,255);
-	DrawContours(drawOutputContours,findContoursOutput,-1, color);
+	findContoursOutput.resize(2);
+
+	//DrawContours(source0,findContoursOutput,-1, color);
+	DrawContours(source0,findContoursOutput,-1, color);
+
+	//cv::Mat newMoment;
+	/*double moment10,moment01, moment00;
+	cv::Point pt1;
+	cv::Point pt2;
+	cv::Moments moment;
+	cv::cvMoments(findCountoursOutput, &moments);*/
+	/*moment10 = moment.m10;
+	moment01 = moment.m01;
+	moment00 = moment.m00;
+	double x = (int)(moment10/moment00);
+	double y = (int)(moment01/moment00);
+	pt1 = cv::Point(x,y);
+
+	cv::line(source0, pt1, pt1, color, 5); */
+	std::vector<cv::Moments> mu( findContoursOutput.size());
+	for (int i = 0; i < (int)(findContoursOutput.size()); i++) {
+		mu[i] = moments(findContoursOutput[i],false);
+	}
+	std::vector<cv::Point2f> mc(findContoursOutput.size());
+	for (int i =  0; i < (int)(findContoursOutput.size()); i++) {
+		mc[i] = cv::Point2f(mu[i].m10/mu[i].m00, mu[i].m01/mu[i].m00);
+	}
+	cv::line(source0, mc[0], mc[1], color, 5);
 }
 
 /**
@@ -92,9 +120,14 @@ std::vector<std::vector<cv::Point> >* GripPipeline::getfindContoursOutput(){
 	}
 
 	void GripPipeline::DrawContours(cv::Mat &imageOutput, std::vector<std::vector<cv::Point>> &points, int idx, const cv::Scalar &color) {
-		cv::drawContours(imageOutput, points, idx, color);
-	}
 
+		cv::drawContours(imageOutput, points, idx, color, 5);
+	}
+	bool GripPipeline::FindContourArea(std::vector<cv::Point> &contour1, std::vector<cv::Point> &contour2) {
+		double i = fabs(cv::contourArea(cv::Mat(contour1)));
+		double j = fabs(cv::contourArea(cv::Mat(contour2)));
+		return (i > j);
+	}
 
 
 } // end grip namespace

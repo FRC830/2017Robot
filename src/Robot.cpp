@@ -66,7 +66,8 @@ private:
 
 			//pipeline->hslThreshold(image, hue, sat, lum, hsl_output);
 			pipeline->Process(image);
-			outputStream.PutFrame(*pipeline->gethslThresholdOutput());
+			//outputStream.PutFrame(*pipeline->gethslThresholdOutput());
+			outputStream.PutFrame(image);
 		}
 
 
