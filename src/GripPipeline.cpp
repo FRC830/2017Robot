@@ -24,9 +24,11 @@ void GripPipeline::Process(cv::Mat &source0){
 	//Step HSL_Threshold0:
 	//input
 	cv::Mat hslThresholdInput = source0;
-	double hslThresholdHue[] = {45.32374100719424, 100.13651877133105};
-	double hslThresholdSaturation[] = {57.32913669064748, 255.0};
-	double hslThresholdLuminance[] = {133.00359712230215, 255.0};
+	double hslThresholdHue[] = {40, 80};
+	double hslThresholdSaturation[] = {220, 255};
+	double hslThresholdLuminance[] = {50, 177};
+
+
 	hslThreshold(hslThresholdInput, hslThresholdHue, hslThresholdSaturation, hslThresholdLuminance, this->hslThresholdOutput);
 	//Step Find_Contours0:
 	//input
@@ -63,10 +65,12 @@ void GripPipeline::Process(cv::Mat &source0){
 	cv::line(source0, cv::Point2f(160,0), cv::Point2f(160,240),color_3,2 );
 	cv::line(source0, cv::Point2f(0,120), cv::Point2f(320,120), color_3,2);
 
+
 	SmartDashboard::PutNumber("x value between bars", mid_point.x);
 	SmartDashboard::PutNumber("middle x value", 160);
 	//SmartDashboard::PutNumber("height", height); //240
 	//SmartDashboard::PutNumber("width", width); //320
+	//return mid_point.x;
 }
 
 /**
@@ -123,7 +127,7 @@ std::vector<std::vector<cv::Point> >* GripPipeline::getfindContoursOutput(){
 
 	void GripPipeline::DrawContours(cv::Mat &imageOutput, std::vector<std::vector<cv::Point>> &points, int idx, const cv::Scalar &color) {
 
-		cv::drawContours(imageOutput, points, idx, color, 5);
+		cv::drawContours(imageOutput, points, idx, color, 3);
 	}
 	bool GripPipeline::FindContourArea(std::vector<cv::Point> &contour1, std::vector<cv::Point> &contour2) {
 		double i = fabs(cv::contourArea(cv::Mat(contour1)));

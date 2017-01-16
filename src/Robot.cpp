@@ -5,12 +5,17 @@
 #include "vision/VisionPipeline.h"
 #include "thread"
 #include "unistd.h"
-
+#include "input/GamepadF310.h"
+#include "util/Algorithms.h"
 
 class Robot: public IterativeRobot {
 
 private:
 	enum AutoMode {ONE, TWO, THREE};
+	static const int LEFT_PWM = 3;
+	static const int RIGHT_PWM = 4;
+	static bool set_exposure;
+	static bool previous_exposure;
 
 	LiveWindow *lw = LiveWindow::GetInstance();
 
@@ -19,6 +24,10 @@ private:
 
 	//grip::GripPipeline * pipeline;
 	SendableChooser<AutoMode*> *chooser;
+	RobotDrive * drive;
+	VictorSP * left_motor;
+	VictorSP * right_motor;
+	Lib830::GamepadF310 * pilot;
 	const std::string autoNameDefault = "Default";
 	const std::string autoNameCustom = "My Auto";
 	std::string autoSelected;
@@ -39,20 +48,26 @@ private:
 
 		cs::CvSink sink;
 		cs::CvSource outputStream;
-		double hue[] = {0.0, 37.16723549488058};
-		double sat[] = {137.58992805755395, 255.0};
-		double lum[] = {59.62230215827338, 255.0};
 
 		server = CameraServer::GetInstance();
 
-		server->StartAutomaticCapture().SetResolution(320,240);
+		camera = server->StartAutomaticCapture();
+		camera.SetResolution(320,240);
 
 		sink = server->GetVideo();
 		outputStream = server->PutVideo("Processed", 400, 400);
 
+		//outputStream.
 		while(1) {
 			bool working = sink.GrabFrame(image_temp);
 			SmartDashboard::PutBoolean("working", working);
+			if (set_exposure && !previous_exposure) {
+				camera.SetExposureManual(10);
+			}
+			else if(!set_exposure && previous_exposure) {
+				camera.SetExposureAuto();
+			}
+			previous_exposure = set_exposure;
 
 			if (working) {
 				g_frame ++;
@@ -79,6 +94,12 @@ private:
 	void RobotInit()
 	{
 		chooser = new SendableChooser<AutoMode*>();
+		drive = new RobotDrive(
+				new VictorSP(LEFT_PWM),
+				new VictorSP(RIGHT_PWM)
+		);
+
+		pilot = new Lib830::GamepadF310(0);
 		//runner = new VisionRunner();
 		chooser->AddDefault(autoNameDefault, new AutoMode(ONE));
 		chooser->AddObject(autoNameCustom, new AutoMode(TWO));
@@ -86,6 +107,7 @@ private:
 
 
 		//outputStream = server->PutVideo("Processed", 400, 400 );
+		//set_exposure = false;
 		std::thread visionThread(CameraPeriodic);
 		visionThread.detach();
 
@@ -132,12 +154,30 @@ private:
 		//std::thread visionThread();
 		//visionThread.detach();
 	}
+	float previousForward = 0;
+	float previousTurn = 0;
 
 	void TeleopPeriodic()
 	{
-		//pipeline-> Process(hsl_output);
-		//outputStream.PutFrame(hsl_output);
-		//server->GetVideo();
+		float targetForward = -(pilot->RightY());
+		float forward = Lib830::accel(previousForward, targetForward, 20);
+		previousForward = targetForward;
+
+		float targetTurn = pilot->LeftX();
+		float turn = Lib830::accel(previousTurn, targetTurn, 30);
+		previousTurn = targetTurn;
+
+		double mid_point = SmartDashboard::GetNumber("x value between bars",0);
+
+		if (pilot->ButtonState(Lib830::GamepadF310::BUTTON_RIGHT_BUMPER)) {
+			turn = (160.0 - mid_point )/ -60.0;
+			set_exposure = true;
+		}
+		else {
+			set_exposure = false;
+		}
+
+		drive->ArcadeDrive(forward/2.0, turn/2.0, true);
 
 
 	}
@@ -146,5 +186,8 @@ private:
 		lw->Run();
 	}
 };
+
+bool Robot::set_exposure = false;
+bool Robot::previous_exposure = false;
 
 START_ROBOT_CLASS(Robot)
