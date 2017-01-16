@@ -5,6 +5,7 @@
  *      Author: RatPack
  */
 #include "GripPipeline.h"
+#include "WPILib.h"
 /**
 * Initializes a GripPipeline.
 */
@@ -42,20 +43,6 @@ void GripPipeline::Process(cv::Mat &source0){
 	//DrawContours(source0,findContoursOutput,-1, color);
 	DrawContours(source0,findContoursOutput,-1, color);
 
-	//cv::Mat newMoment;
-	/*double moment10,moment01, moment00;
-	cv::Point pt1;
-	cv::Point pt2;
-	cv::Moments moment;
-	cv::cvMoments(findCountoursOutput, &moments);*/
-	/*moment10 = moment.m10;
-	moment01 = moment.m01;
-	moment00 = moment.m00;
-	double x = (int)(moment10/moment00);
-	double y = (int)(moment01/moment00);
-	pt1 = cv::Point(x,y);
-
-	cv::line(source0, pt1, pt1, color, 5); */
 	std::vector<cv::Moments> mu( findContoursOutput.size());
 	for (int i = 0; i < (int)(findContoursOutput.size()); i++) {
 		mu[i] = moments(findContoursOutput[i],false);
@@ -65,6 +52,21 @@ void GripPipeline::Process(cv::Mat &source0){
 		mc[i] = cv::Point2f(mu[i].m10/mu[i].m00, mu[i].m01/mu[i].m00);
 	}
 	cv::line(source0, mc[0], mc[1], color, 5);
+	cv::Point mid_point = (mc[0] + mc[1])/2;
+	cv::Scalar color_2(255,255,255);
+	cv::line(source0, mid_point, mid_point,color_2,5 );
+
+	float height = source0.size().height;
+	float width = source0.size().width;
+
+	cv::Scalar color_3 (0,255,255);
+	cv::line(source0, cv::Point2f(160,0), cv::Point2f(160,240),color_3,2 );
+	cv::line(source0, cv::Point2f(0,120), cv::Point2f(320,120), color_3,2);
+
+	SmartDashboard::PutNumber("x value between bars", mid_point.x);
+	SmartDashboard::PutNumber("middle x value", 160);
+	//SmartDashboard::PutNumber("height", height); //240
+	//SmartDashboard::PutNumber("width", width); //320
 }
 
 /**
