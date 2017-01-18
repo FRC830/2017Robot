@@ -11,14 +11,17 @@ class Robot: public IterativeRobot
 public:
 	enum AutoMode {LEFT_SIDE, RIGHT_SIDE, CENTER, BASELINE};
 private:
+	//drivetrain motors
 	static const int LEFT_PWM_ONE = 0;
 	static const int LEFT_PWM_TWO = 1;
 	static const int RIGHT_PWM_ONE = 2;
 	static const int RIGHT_PWM_TWO = 3;
 
+	//gear shifting
 	static const DoubleSolenoid::Value LOW = DoubleSolenoid::kForward;
 	static const DoubleSolenoid::Value HIGH = DoubleSolenoid::kReverse;
 
+	//drivetrain
 	RobotDrive * drive;
 	VictorSP * frontLeft;
 	VictorSP * backLeft;
@@ -34,6 +37,7 @@ private:
 	CameraServer * camera;
 	LiveWindow *lw = LiveWindow::GetInstance();
 
+	//auton chooser
 	SendableChooser<AutoMode*> *chooser;
 	const std::string autoNameDefault = "Default";
 	const std::string autoNameCustom = "My Auto";
@@ -49,24 +53,26 @@ private:
 			new VictorSP(RIGHT_PWM_TWO)
 		);
 
+		//gear shifting
 		enum PCM_id {
 			GEAR_SHIFT_SOL_FORWARD = 0,
 			GEAR_SHIFT_SOL_REVERSE = 1,
 		};
+		gear_shift = new DoubleSolenoid(GEAR_SHIFT_SOL_FORWARD, GEAR_SHIFT_SOL_REVERSE);
 
 		pilot = new GamepadF310(0);
 		copilot = new GamepadF310(1);
 
-		gear_shift = new DoubleSolenoid(GEAR_SHIFT_SOL_FORWARD, GEAR_SHIFT_SOL_REVERSE);
-
+		//autonChooser
 		chooser = new SendableChooser<AutoMode*>();
 		chooser->AddDefault(autoNameDefault, new AutoMode(BASELINE));
 		chooser->AddObject(autoNameCustom, new AutoMode(LEFT_SIDE));
 		chooser->AddObject(autoNameCustom, new AutoMode(RIGHT_SIDE));
 		chooser->AddObject(autoNameCustom, new AutoMode(CENTER));
 		SmartDashboard::PutData("Auto Modes", chooser);
+		
+		//camera stuff
 		camera = CameraServer::GetInstance();
-
 		camera->StartAutomaticCapture();
 
 	}
@@ -78,6 +84,7 @@ private:
 
 		gear_shift->Set(LOW);
 
+		//autonChooser
 		autoSelected = *((std::string*)chooser->GetSelected());
 		std::string autoSelected = SmartDashboard::GetString("Auto Selector", autoNameDefault);
 		std::cout << "Auto selected: " << autoSelected << std::endl;
