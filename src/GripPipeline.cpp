@@ -25,27 +25,27 @@ void GripPipeline::Process(cv::Mat &source0){
 	//input
 	cv::Mat hslThresholdInput = source0;
 	double hslThresholdHue[] = {40, 80};
-	double hslThresholdSaturation[] = {220, 255};
-	double hslThresholdLuminance[] = {50, 177};
+	double hslThresholdSaturation[] = {57, 255};
+	double hslThresholdLuminance[] = {150, 255};
 
+	double filterContoursMaxVertecies = 75.0;
+	double filterContoursMinVertecies = 55.0;
 
 	hslThreshold(hslThresholdInput, hslThresholdHue, hslThresholdSaturation, hslThresholdLuminance, this->hslThresholdOutput);
-	//Step Find_Contours0:
-	//input
 	cv::Mat findContoursInput = hslThresholdOutput;
 	bool findContoursExternalOnly = true;  // default Boolean
 	findContours(findContoursInput, findContoursExternalOnly, this->findContoursOutput);
+	filterContourVertecies(findContoursOutput, filterContoursMaxVertecies, filterContoursMinVertecies, this->filterContourVerteciesOutput);
 
-	//cv::Mat drawOutputContours = source0;
 	cv::Scalar color(255,128,0);
-	std::sort(findContoursOutput.begin(), findContoursOutput.end(), FindContourArea);
+	//std::sort(findContoursOutput.begin(), findContoursOutput.end(), FindContourArea);
+	std::sort(filterContourVerteciesOutput.begin(), filterContourVerteciesOutput.end(), FindContourArea);
 
-	findContoursOutput.resize(2);
+	filterContourVerteciesOutput.resize(2);
 
-	//DrawContours(source0,findContoursOutput,-1, color);
-	DrawContours(source0,findContoursOutput,-1, color);
+	//DrawContours(source0,filterContourVerteciesOutput,-1, color);
 
-	std::vector<cv::Moments> mu( findContoursOutput.size());
+	/*std::vector<cv::Moments> mu( findContoursOutput.size());
 	for (int i = 0; i < (int)(findContoursOutput.size()); i++) {
 		mu[i] = moments(findContoursOutput[i],false);
 	}
@@ -56,21 +56,38 @@ void GripPipeline::Process(cv::Mat &source0){
 	cv::line(source0, mc[0], mc[1], color, 5);
 	cv::Point mid_point = (mc[0] + mc[1])/2;
 	cv::Scalar color_2(255,255,255);
-	cv::line(source0, mid_point, mid_point,color_2,5 );
+	cv::line(source0, mid_point, mid_point,color_2,5 );*/
+	cv::Scalar color_2(255,255,0);
 
-	float height = source0.size().height;
-	float width = source0.size().width;
+	std::vector<cv::Rect> boundRect(filterContourVerteciesOutput.size());
+
+
+	for (int i = 0; i < (int)(filterContourVerteciesOutput.size()); i ++) {
+		boundRect[i] = cv::boundingRect(cv::Mat(filterContourVerteciesOutput[i]));
+		float width = boundRect[i].width;
+		float height = boundRect[i].height;
+		if (width/height < 0.30 || width/height > 0.50) {
+			filterContourVerteciesOutput.erase(filterContourVerteciesOutput.begin() + i);
+		}
+		else {
+			SmartDashboard::PutNumber("ratio", width/height);
+			cv::rectangle(source0, boundRect[i].tl(), boundRect[i].br(), color_2, 2);
+		}
+	}
+
+
 
 	cv::Scalar color_3 (0,255,255);
 	cv::line(source0, cv::Point2f(160,0), cv::Point2f(160,240),color_3,2 );
 	cv::line(source0, cv::Point2f(0,120), cv::Point2f(320,120), color_3,2);
 
 
-	SmartDashboard::PutNumber("x value between bars", mid_point.x);
+	//SmartDashboard::PutNumber("x value between bars", mid_point.x);
 	SmartDashboard::PutNumber("middle x value", 160);
 	//SmartDashboard::PutNumber("height", height); //240
 	//SmartDashboard::PutNumber("width", width); //320
 	//return mid_point.x;
+
 }
 
 /**
@@ -93,6 +110,10 @@ cv::Mat* GripPipeline::gethslThresholdOutput(){
  */
 std::vector<std::vector<cv::Point> >* GripPipeline::getfindContoursOutput(){
 	return &(this->findContoursOutput);
+}
+
+std::vector<std::vector<cv::Point> >* GripPipeline::getfilterContoursOutput() {
+	return &(this->filterContourVerteciesOutput);
 }
 
 	/**
@@ -133,6 +154,16 @@ std::vector<std::vector<cv::Point> >* GripPipeline::getfindContoursOutput(){
 		double i = fabs(cv::contourArea(cv::Mat(contour1)));
 		double j = fabs(cv::contourArea(cv::Mat(contour2)));
 		return (i > j);
+	}
+
+	void GripPipeline::filterContourVertecies(std::vector <std::vector <cv::Point>> &contours, double maxVertexCount, double minVertexCount, std::vector<std::vector <cv::Point>> &output) {
+		output.clear();
+		for (std::vector <cv::Point> contour: contours) {
+			if (contour.size() < minVertexCount || contour.size() > maxVertexCount) {
+				continue;
+			}
+			output.push_back(contour);
+		}
 	}
 
 

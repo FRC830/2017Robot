@@ -56,19 +56,19 @@ private:
 
 		sink = server->GetVideo();
 		outputStream = server->PutVideo("Processed", 400, 400);
-
 		//outputStream.
+		//camera.SetExposureManual(80);
+
 		while(1) {
 			bool working = sink.GrabFrame(image_temp);
 			SmartDashboard::PutBoolean("working", working);
-			if (set_exposure && !previous_exposure) {
+			/*if (set_exposure && !previous_exposure) {
 				camera.SetExposureManual(10);
 			}
 			else if(!set_exposure && previous_exposure) {
-				camera.SetExposureAuto();
+				camera.SetExposureManual(80);
 			}
-			previous_exposure = set_exposure;
-
+			previous_exposure = set_exposure; */
 			if (working) {
 				g_frame ++;
 				image = image_temp;
@@ -177,7 +177,7 @@ private:
 			set_exposure = false;
 		}
 
-		drive->ArcadeDrive(forward/2.0, turn/2.0, true);
+		//drive->ArcadeDrive(forward/2.0, turn/2.0, true);
 
 
 	}
