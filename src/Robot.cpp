@@ -27,7 +27,7 @@ private:
 	VictorSP * backLeft;
 	VictorSP * frontRight;
 	VictorSP * backRight;
-	DoubleSolenoid * gear_shift;
+	//DoubleSolenoid * gear_shift;
 
 	GamepadF310 * pilot;
 	GamepadF310 * copilot;
@@ -55,10 +55,10 @@ private:
 
 		//gear shifting
 		enum PCM_id {
-			GEAR_SHIFT_SOL_FORWARD = 0,
-			GEAR_SHIFT_SOL_REVERSE = 1,
+			//GEAR_SHIFT_SOL_FORWARD = 0,
+//			GEAR_SHIFT_SOL_REVERSE = 1,
 		};
-		gear_shift = new DoubleSolenoid(GEAR_SHIFT_SOL_FORWARD, GEAR_SHIFT_SOL_REVERSE);
+//		gear_shift = new DoubleSolenoid(GEAR_SHIFT_SOL_FORWARD, GEAR_SHIFT_SOL_REVERSE);
 
 		pilot = new GamepadF310(0);
 		copilot = new GamepadF310(1);
@@ -82,7 +82,7 @@ private:
 		timer->Reset();
 		timer->Start();
 
-		gear_shift->Set(LOW);
+		//gear_shift->Set(LOW);
 
 		//autonChooser
 		autoSelected = *((std::string*)chooser->GetSelected());
@@ -109,7 +109,7 @@ private:
 			break;
 
 			case CENTER:
-				if (time < 4.0){
+				if (time < 2.0){
 					drive->ArcadeDrive(0.5, 0, 1);
 				}
 			break;
@@ -141,11 +141,11 @@ private:
 		drive->ArcadeDrive(speed, turn);
 
 		if (pilot->LeftTrigger() > 0.5){
-			gear_shift->Set(LOW);
+			//gear_shift->Set(LOW);
 		} else {
-			gear_shift->Set(HIGH);
+			//gear_shift->Set(HIGH);
 		}
-		SmartDashboard::PutString("gear", gear_shift->Get() == LOW ? "low" : "high");
+//		SmartDashboard::PutString("gear", gear_shift->Get() == LOW ? "low" : "high");
 
 	}
 
