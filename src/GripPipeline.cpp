@@ -24,56 +24,70 @@ void GripPipeline::Process(cv::Mat &source0){
 	//Step HSL_Threshold0:
 	//input
 	cv::Mat hslThresholdInput = source0;
-	double hslThresholdHue[] = {40, 80};
-	double hslThresholdSaturation[] = {57, 255};
-	double hslThresholdLuminance[] = {150, 255};
+	/*double hslThresholdHue[] = {40, 80};
+	double hslThresholdSaturation[] = {57, 127};
+	double hslThresholdLuminance[] = {225, 255}; */
+	 double hslThresholdHue[] = {0,180};
+     double hslThresholdSaturation[] = {28, 255.0};
+     double hslThresholdLuminance[] = {240, 255.0};
 
-	double filterContoursMaxVertecies = 75.0;
-	double filterContoursMinVertecies = 55.0;
+
+	double filterContoursMaxVertecies = 55;
+	double filterContoursMinVertecies = 1;
 
 	hslThreshold(hslThresholdInput, hslThresholdHue, hslThresholdSaturation, hslThresholdLuminance, this->hslThresholdOutput);
 	cv::Mat findContoursInput = hslThresholdOutput;
 	bool findContoursExternalOnly = true;  // default Boolean
+
 	findContours(findContoursInput, findContoursExternalOnly, this->findContoursOutput);
-	filterContourVertecies(findContoursOutput, filterContoursMaxVertecies, filterContoursMinVertecies, this->filterContourVerteciesOutput);
-
 	cv::Scalar color(255,128,0);
-	//std::sort(findContoursOutput.begin(), findContoursOutput.end(), FindContourArea);
-	std::sort(filterContourVerteciesOutput.begin(), filterContourVerteciesOutput.end(), FindContourArea);
+//	cv::Scalar color(255,128,0);
 
-	filterContourVerteciesOutput.resize(2);
-
-	//DrawContours(source0,filterContourVerteciesOutput,-1, color);
-
-	/*std::vector<cv::Moments> mu( findContoursOutput.size());
-	for (int i = 0; i < (int)(findContoursOutput.size()); i++) {
-		mu[i] = moments(findContoursOutput[i],false);
+	std::vector<std::vector<cv::Point>> smoothContours(findContoursOutput.size());
+	for (int i = 0; i < (int) (findContoursOutput.size()); i++) {
+		cv::approxPolyDP(findContoursOutput[i], smoothContours[i], 4, true);
 	}
-	std::vector<cv::Point2f> mc(findContoursOutput.size());
-	for (int i =  0; i < (int)(findContoursOutput.size()); i++) {
+
+	filterContourVertecies(smoothContours, filterContoursMaxVertecies, filterContoursMinVertecies, this->filterContourVerteciesOutput);
+
+	smoothContours = filterContourVerteciesOutput;
+
+	//DrawContours(source0,findContoursOutput,-1, color);
+
+	//DrawContours(source0,smoothContours,-1, color);
+
+	cv::Scalar color_2(255,255,0);
+	std::vector<cv::Rect> boundRect(smoothContours.size());
+
+	if (smoothContours.size() <= 2) {
+		return;
+	}
+	else {
+		std::sort(smoothContours.begin(), smoothContours.end(), FindContourArea);
+		smoothContours.resize(2);
+	}
+
+
+
+	for (int i = 0; i < (int)(smoothContours.size()); i ++) {
+		boundRect[i] = cv::boundingRect(cv::Mat(smoothContours[i]));
+		//float width = boundRect[i].width;
+		//float height = boundRect[i].height;
+		cv::rectangle(source0, boundRect[i].tl(), boundRect[i].br(), color_2, 2);
+	}
+
+
+	std::vector<cv::Moments> mu( smoothContours.size());
+	for (int i = 0; i < (int)(smoothContours.size()); i++) {
+		mu[i] = moments(smoothContours[i],false);
+	}
+	std::vector<cv::Point2f> mc(smoothContours.size());
+	for (int i =  0; i < (int)(smoothContours.size()); i++) {
 		mc[i] = cv::Point2f(mu[i].m10/mu[i].m00, mu[i].m01/mu[i].m00);
 	}
 	cv::line(source0, mc[0], mc[1], color, 5);
 	cv::Point mid_point = (mc[0] + mc[1])/2;
-	cv::Scalar color_2(255,255,255);
-	cv::line(source0, mid_point, mid_point,color_2,5 );*/
-	cv::Scalar color_2(255,255,0);
-
-	std::vector<cv::Rect> boundRect(filterContourVerteciesOutput.size());
-
-
-	for (int i = 0; i < (int)(filterContourVerteciesOutput.size()); i ++) {
-		boundRect[i] = cv::boundingRect(cv::Mat(filterContourVerteciesOutput[i]));
-		float width = boundRect[i].width;
-		float height = boundRect[i].height;
-		if (width/height < 0.30 || width/height > 0.50) {
-			filterContourVerteciesOutput.erase(filterContourVerteciesOutput.begin() + i);
-		}
-		else {
-			SmartDashboard::PutNumber("ratio", width/height);
-			cv::rectangle(source0, boundRect[i].tl(), boundRect[i].br(), color_2, 2);
-		}
-	}
+	cv::line(source0, mid_point, mid_point,color_2,5 );
 
 
 
