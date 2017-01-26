@@ -12,14 +12,10 @@ public:
 	enum AutoMode {LEFT_SIDE, RIGHT_SIDE, CENTER, BASELINE};
 private:
 	//drivetrain motors
-	static const int LEFT_PWM_ONE = 0;
-	static const int LEFT_PWM_TWO = 1;
-	static const int RIGHT_PWM_ONE = 2;
-	static const int RIGHT_PWM_TWO = 3;
-
-	//gear shifting
-	static const DoubleSolenoid::Value LOW = DoubleSolenoid::kForward;
-	static const DoubleSolenoid::Value HIGH = DoubleSolenoid::kReverse;
+	static const int LEFT_PWM_ONE = 8;
+	static const int LEFT_PWM_TWO = 9;
+	static const int RIGHT_PWM_ONE = 0;
+	static const int RIGHT_PWM_TWO = 1;
 
 	//drivetrain
 	RobotDrive * drive;
@@ -27,7 +23,6 @@ private:
 	VictorSP * backLeft;
 	VictorSP * frontRight;
 	VictorSP * backRight;
-	//DoubleSolenoid * gear_shift;
 
 	GamepadF310 * pilot;
 	GamepadF310 * copilot;
@@ -39,8 +34,10 @@ private:
 
 	//auton chooser
 	SendableChooser<AutoMode*> *chooser;
-	const std::string autoNameDefault = "Default";
-	const std::string autoNameCustom = "My Auto";
+	const std::string autoNameDefault = "Baseline";
+	const std::string autoNameCustom = "Left Side";
+	const std::string autoNameCustom = "Right Side";
+	const std::string autoNameCustom = "Center";
 	std::string autoSelected;
 
 
@@ -52,13 +49,6 @@ private:
 			new VictorSP(RIGHT_PWM_ONE),
 			new VictorSP(RIGHT_PWM_TWO)
 		);
-
-		//gear shifting
-		enum PCM_id {
-			//GEAR_SHIFT_SOL_FORWARD = 0,
-//			GEAR_SHIFT_SOL_REVERSE = 1,
-		};
-//		gear_shift = new DoubleSolenoid(GEAR_SHIFT_SOL_FORWARD, GEAR_SHIFT_SOL_REVERSE);
 
 		pilot = new GamepadF310(0);
 		copilot = new GamepadF310(1);
@@ -81,8 +71,6 @@ private:
 	{
 		timer->Reset();
 		timer->Start();
-
-		//gear_shift->Set(LOW);
 
 		//autonChooser
 		autoSelected = *((std::string*)chooser->GetSelected());
@@ -140,12 +128,6 @@ private:
 
 		drive->ArcadeDrive(speed, turn);
 
-		if (pilot->LeftTrigger() > 0.5){
-			//gear_shift->Set(LOW);
-		} else {
-			//gear_shift->Set(HIGH);
-		}
-//		SmartDashboard::PutString("gear", gear_shift->Get() == LOW ? "low" : "high");
 
 	}
 
