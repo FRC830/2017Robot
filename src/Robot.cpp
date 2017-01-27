@@ -163,21 +163,25 @@ private:
 		float forward = Lib830::accel(previousForward, targetForward, 20);
 		previousForward = targetForward;
 
-		float targetTurn = pilot->LeftX();
+		/*float targetTurn = pilot->LeftX();
 		float turn = Lib830::accel(previousTurn, targetTurn, 30);
-		previousTurn = targetTurn;
+		previousTurn = targetTurn; */
 
 		double mid_point = SmartDashboard::GetNumber("x value between bars",0);
 
-		if (pilot->ButtonState(Lib830::GamepadF310::BUTTON_RIGHT_BUMPER)) {
+		float targetTurn = (160.0 - mid_point) /-60.0;
+		float turn = Lib830::accel(previousTurn, targetTurn, 10);
+		previousTurn = targetTurn;
+
+		/*if (pilot->ButtonState(Lib830::GamepadF310::BUTTON_RIGHT_BUMPER)) {
 			turn = (160.0 - mid_point )/ -60.0;
 			set_exposure = true;
 		}
 		else {
 			set_exposure = false;
-		}
+		} */
 
-		//drive->ArcadeDrive(forward/2.0, turn/2.0, true);
+		drive->ArcadeDrive(forward/2.0, turn, true);
 
 
 	}

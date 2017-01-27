@@ -59,7 +59,20 @@ void GripPipeline::Process(cv::Mat &source0){
 	cv::Scalar color_2(255,255,0);
 	std::vector<cv::Rect> boundRect(smoothContours.size());
 
-	if (smoothContours.size() <= 2) {
+
+
+	for (int i = 0; i < (int)(smoothContours.size()); i ++) {
+		boundRect[i] = cv::boundingRect(cv::Mat(smoothContours[i]));
+		double width = boundRect[i].width;
+		double height = boundRect[i].height;
+		double ratio = width/height;
+		if ( ratio < 0.30 || ratio > 0.55) {
+			smoothContours.erase (smoothContours.begin() + i);
+			boundRect.erase(boundRect.begin() + i);
+		}
+	}
+
+	if (smoothContours.size() < 2) {
 		return;
 	}
 	else {
@@ -67,15 +80,12 @@ void GripPipeline::Process(cv::Mat &source0){
 		smoothContours.resize(2);
 	}
 
-
-
-	for (int i = 0; i < (int)(smoothContours.size()); i ++) {
-		boundRect[i] = cv::boundingRect(cv::Mat(smoothContours[i]));
-		//float width = boundRect[i].width;
-		//float height = boundRect[i].height;
+	for (int i = 0; i < (int)(smoothContours.size()); i++) {
 		cv::rectangle(source0, boundRect[i].tl(), boundRect[i].br(), color_2, 2);
 	}
 
+	SmartDashboard::PutNumber("ratio 1", double(boundRect[0].width)/ double(boundRect[0].height) );
+	SmartDashboard::PutNumber("ratio 2", double(boundRect[1].width)/double(boundRect[1].height) );
 
 	std::vector<cv::Moments> mu( smoothContours.size());
 	for (int i = 0; i < (int)(smoothContours.size()); i++) {
@@ -96,7 +106,7 @@ void GripPipeline::Process(cv::Mat &source0){
 	cv::line(source0, cv::Point2f(0,120), cv::Point2f(320,120), color_3,2);
 
 
-	//SmartDashboard::PutNumber("x value between bars", mid_point.x);
+	SmartDashboard::PutNumber("x value between bars", mid_point.x);
 	SmartDashboard::PutNumber("middle x value", 160);
 	//SmartDashboard::PutNumber("height", height); //240
 	//SmartDashboard::PutNumber("width", width); //320
