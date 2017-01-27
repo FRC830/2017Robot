@@ -1,6 +1,7 @@
 #include "WPILib.h"
 #include "CameraServer.h"
 #include "Lib830.h"
+#include "AnalogGyro.h"
 
 using namespace Lib830;
 
@@ -9,13 +10,15 @@ class Robot: public IterativeRobot
 	float previousTurn = 0;
 	float previousSpeed = 0;
 public:
-	enum AutoMode {LEFT_SIDE, RIGHT_SIDE, CENTER, BASELINE};
+	enum AutoMode {LEFT_SIDE, RIGHT_SIDE, CENTER, BASELINE, NOTHING};
 private:
 	//drivetrain motors
 	static const int LEFT_PWM_ONE = 9;
 	static const int LEFT_PWM_TWO = 8;
 	static const int RIGHT_PWM_ONE = 0;
 	static const int RIGHT_PWM_TWO = 1;
+
+	static const int ANALOG_GYRO = 0;
 
 	//drivetrain
 	RobotDrive * drive;
@@ -25,17 +28,19 @@ private:
 
 	Timer timer;
 
+	frc::AnalogGyro *gyro;
+
 	CameraServer * camera;
 	LiveWindow *lw = LiveWindow::GetInstance();
 
+	static const int TICKS_TO_ACCEL = 10;
+
 	//auton chooser
 	SendableChooser<AutoMode*> *chooser;
-	const std::string autoNameDefault = "Baseline";
-	const std::string autoNameCustom = "Left Side";
-	//const std::string autoNameCustom = "Right Side";
-	//const std::string autoNameCustom = "Center";
-	std::string autoSelected;
 
+	void arcadeDrive(double speed, double turn, bool squaredinputs = false) {
+		drive->ArcadeDrive(speed, -turn, squaredinputs);
+	}
 
 	void RobotInit()
 	{
@@ -49,12 +54,15 @@ private:
 		pilot = new GamepadF310(0);
 		copilot = new GamepadF310(1);
 
+		gyro = new frc::AnalogGyro(ANALOG_GYRO);
+
 		//autonChooser
 		chooser = new SendableChooser<AutoMode*>();
-		chooser->AddDefault(autoNameDefault, new AutoMode(BASELINE));
+		chooser->AddDefault("baseline", new AutoMode(BASELINE));
 		chooser->AddObject("Left Side", new AutoMode(LEFT_SIDE));
 		chooser->AddObject("Right Side", new AutoMode(RIGHT_SIDE));
 		chooser->AddObject("Center", new AutoMode(CENTER));
+		chooser->AddObject("default", new AutoMode(NOTHING));
 		SmartDashboard::PutData("Auto Modes", chooser);
 		
 		//camera stuff
@@ -67,11 +75,10 @@ private:
 	{
 		timer.Reset();
 		timer.Start();
+		gyro->Reset();
 
 		//autonChooser
-		autoSelected = *((std::string*)chooser->GetSelected());
-		std::string autoSelected = SmartDashboard::GetString("Auto Selector", autoNameDefault);
-		std::cout << "Auto selected: " << autoSelected << std::endl;
+		//std::string autoSelected = SmartDashboard::GetString("Auto Selector", autoNameDefault);
 
 	}
 
@@ -79,51 +86,60 @@ private:
 	{
 		float time = timer.Get();
 
-		/*switch(autoSelected){
+		double angle = gyro->GetAngle();
+		double turn = angle /-17.0;
+
+
+		switch(*chooser->GetSelected()){
 			case LEFT_SIDE:
 				if(time < 3){
 					drive->ArcadeDrive(0.5, -0.5, 1);
 				}
-			break;
+				break;
 
 			case RIGHT_SIDE:
 				if(time < 3){
 					drive->ArcadeDrive(0.5, 0.5, 1);
 				}
-			break;
+				break;
 
 			case CENTER:
 				if (time < 2.0){
-					drive->ArcadeDrive(0.5, 0, 1);
+					drive->ArcadeDrive(0.5, turn, 1);
 				}
-			break;
+				break;
 
-			default:
+			case BASELINE:
 				if (time < 5){
-					drive->ArcadeDrive(0.4, 0.0, 1);
+					arcadeDrive(0.5, turn, 1);
 				}
-			break;
-		}*/
+				break;
+			default:
+				arcadeDrive(0.0,turn, false);
+		}
 
 		//camera->StartAutomaticCapture();
 	}
 
 	void TeleopInit()
 	{
-
+		gyro->Reset();
 	}
 
 	void TeleopPeriodic()
 	{
 		float targetTurn = pilot->RightX();
-		float turn = accel(previousTurn, targetTurn, 5);
+		float turn = accel(previousTurn, targetTurn, TICKS_TO_ACCEL);
 		previousTurn = turn;
 
 		float targetForward = pilot->LeftY();
-		float speed = accel(previousSpeed, targetForward, 5);
+		float speed = accel(previousSpeed, targetForward, TICKS_TO_ACCEL);
 		previousSpeed = speed;
 
-		drive->ArcadeDrive(speed, turn, true);
+		drive->ArcadeDrive(speed, -turn, true);
+		double angle = gyro->GetAngle();
+
+		SmartDashboard::PutNumber("gyro angle", angle);
 
 
 
