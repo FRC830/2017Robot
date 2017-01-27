@@ -17,17 +17,13 @@ private:
 	static const int RIGHT_PWM_ONE = 0;
 	static const int RIGHT_PWM_TWO = 1;
 
-	static const int TEST_PWM = 3;
-
 	//drivetrain
 	RobotDrive * drive;
-
-	Spark * testMotor;
 
 	GamepadF310 * pilot;
 	GamepadF310 * copilot;
 
-	Timer * timer;
+	Timer timer;
 
 	CameraServer * camera;
 	LiveWindow *lw = LiveWindow::GetInstance();
@@ -49,15 +45,9 @@ private:
 			new VictorSP(RIGHT_PWM_ONE),
 			new VictorSP(RIGHT_PWM_TWO)
 		);
-		/*drive = new RobotDrive (
-			new VictorSP(LEFT_PWM_ONE),
-			new VictorSP(LEFT_PWM_TWO)
-		);*/
 
 		pilot = new GamepadF310(0);
 		copilot = new GamepadF310(1);
-
-		testMotor = new Spark(3);
 
 		//autonChooser
 		chooser = new SendableChooser<AutoMode*>();
@@ -75,8 +65,8 @@ private:
 
 	void AutonomousInit()
 	{
-		timer->Reset();
-		timer->Start();
+		timer.Reset();
+		timer.Start();
 
 		//autonChooser
 		autoSelected = *((std::string*)chooser->GetSelected());
@@ -87,7 +77,7 @@ private:
 
 	void AutonomousPeriodic()
 	{
-		float time = timer->Get();
+		float time = timer.Get();
 
 		/*switch(autoSelected){
 			case LEFT_SIDE:
