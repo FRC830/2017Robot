@@ -12,17 +12,17 @@ public:
 	enum AutoMode {LEFT_SIDE, RIGHT_SIDE, CENTER, BASELINE};
 private:
 	//drivetrain motors
-	static const int LEFT_PWM_ONE = 8;
-	static const int LEFT_PWM_TWO = 9;
+	static const int LEFT_PWM_ONE = 9;
+	static const int LEFT_PWM_TWO = 8;
 	static const int RIGHT_PWM_ONE = 0;
 	static const int RIGHT_PWM_TWO = 1;
 
+	static const int TEST_PWM = 3;
+
 	//drivetrain
 	RobotDrive * drive;
-	VictorSP * frontLeft;
-	VictorSP * backLeft;
-	VictorSP * frontRight;
-	VictorSP * backRight;
+
+	Spark * testMotor;
 
 	GamepadF310 * pilot;
 	GamepadF310 * copilot;
@@ -36,8 +36,8 @@ private:
 	SendableChooser<AutoMode*> *chooser;
 	const std::string autoNameDefault = "Baseline";
 	const std::string autoNameCustom = "Left Side";
-	const std::string autoNameCustom = "Right Side";
-	const std::string autoNameCustom = "Center";
+	//const std::string autoNameCustom = "Right Side";
+	//const std::string autoNameCustom = "Center";
 	std::string autoSelected;
 
 
@@ -49,16 +49,22 @@ private:
 			new VictorSP(RIGHT_PWM_ONE),
 			new VictorSP(RIGHT_PWM_TWO)
 		);
+		/*drive = new RobotDrive (
+			new VictorSP(LEFT_PWM_ONE),
+			new VictorSP(LEFT_PWM_TWO)
+		);*/
 
 		pilot = new GamepadF310(0);
 		copilot = new GamepadF310(1);
 
+		testMotor = new Spark(3);
+
 		//autonChooser
 		chooser = new SendableChooser<AutoMode*>();
 		chooser->AddDefault(autoNameDefault, new AutoMode(BASELINE));
-		chooser->AddObject(autoNameCustom, new AutoMode(LEFT_SIDE));
-		chooser->AddObject(autoNameCustom, new AutoMode(RIGHT_SIDE));
-		chooser->AddObject(autoNameCustom, new AutoMode(CENTER));
+		chooser->AddObject("Left Side", new AutoMode(LEFT_SIDE));
+		chooser->AddObject("Right Side", new AutoMode(RIGHT_SIDE));
+		chooser->AddObject("Center", new AutoMode(CENTER));
 		SmartDashboard::PutData("Auto Modes", chooser);
 		
 		//camera stuff
@@ -83,7 +89,7 @@ private:
 	{
 		float time = timer->Get();
 
-		switch(autoSelected){
+		/*switch(autoSelected){
 			case LEFT_SIDE:
 				if(time < 3){
 					drive->ArcadeDrive(0.5, -0.5, 1);
@@ -107,9 +113,9 @@ private:
 					drive->ArcadeDrive(0.4, 0.0, 1);
 				}
 			break;
-		}
+		}*/
 
-		camera->StartAutomaticCapture();
+		//camera->StartAutomaticCapture();
 	}
 
 	void TeleopInit()
@@ -120,13 +126,16 @@ private:
 	void TeleopPeriodic()
 	{
 		float targetTurn = pilot->RightX();
-		float turn = accel(previousTurn, targetTurn, 20);
+		float turn = accel(previousTurn, targetTurn, 5);
 		previousTurn = turn;
+
 		float targetForward = pilot->LeftY();
-		float speed = accel(previousSpeed, targetForward, 30);
+		float speed = accel(previousSpeed, targetForward, 5);
 		previousSpeed = speed;
 
-		drive->ArcadeDrive(speed, turn);
+		drive->ArcadeDrive(speed, turn, true);
+
+
 
 
 	}
