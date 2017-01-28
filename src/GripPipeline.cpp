@@ -61,7 +61,7 @@ void GripPipeline::Process(cv::Mat &source0){
 
 
 
-	for (int i = 0; i < (int)(smoothContours.size()); i ++) {
+	for (int i = 0; i < (int)(smoothContours.size()); /*nothing*/) {
 		boundRect[i] = cv::boundingRect(cv::Mat(smoothContours[i]));
 		double width = boundRect[i].width;
 		double height = boundRect[i].height;
@@ -70,24 +70,45 @@ void GripPipeline::Process(cv::Mat &source0){
 			smoothContours.erase (smoothContours.begin() + i);
 			boundRect.erase(boundRect.begin() + i);
 		}
+		else {
+			i++;
+		}
 	}
 
-	if (smoothContours.size() < 2) {
+	if (smoothContours.size() < 2 || boundRect.size() < 2) {
 		return;
 	}
 	else {
 		std::sort(smoothContours.begin(), smoothContours.end(), FindContourArea);
+		boundRect.resize(2);
 		smoothContours.resize(2);
 	}
+
+	for (int i = 0; i < 2; i++ ) {
+		boundRect[i] = cv::boundingRect(cv::Mat(smoothContours[i]));
+	}
+
 
 	for (int i = 0; i < (int)(smoothContours.size()); i++) {
 		cv::rectangle(source0, boundRect[i].tl(), boundRect[i].br(), color_2, 2);
 	}
 
+	//DrawContours(source0, smoothContours,-1, color);
+
 	SmartDashboard::PutNumber("ratio 1", double(boundRect[0].width)/ double(boundRect[0].height) );
 	SmartDashboard::PutNumber("ratio 2", double(boundRect[1].width)/double(boundRect[1].height) );
 
-	std::vector<cv::Moments> mu( smoothContours.size());
+	cv::Point center;
+
+	if (boundRect.size() == 2) {
+		cv::Point top_left = boundRect[0].tl();
+		cv::Point bottom_right = boundRect[1].br();
+		center = (top_left + bottom_right)/2;
+		cv::line(source0, top_left, bottom_right, color_2, 3);
+		cv::line(source0, center, center, color, 5);
+	}
+
+	/*std::vector<cv::Moments> mu( smoothContours.size());
 	for (int i = 0; i < (int)(smoothContours.size()); i++) {
 		mu[i] = moments(smoothContours[i],false);
 	}
@@ -97,7 +118,7 @@ void GripPipeline::Process(cv::Mat &source0){
 	}
 	cv::line(source0, mc[0], mc[1], color, 5);
 	cv::Point mid_point = (mc[0] + mc[1])/2;
-	cv::line(source0, mid_point, mid_point,color_2,5 );
+	cv::line(source0, mid_point, mid_point,color_2,5 ); */
 
 
 
@@ -106,7 +127,7 @@ void GripPipeline::Process(cv::Mat &source0){
 	cv::line(source0, cv::Point2f(0,120), cv::Point2f(320,120), color_3,2);
 
 
-	SmartDashboard::PutNumber("x value between bars", mid_point.x);
+	SmartDashboard::PutNumber("x value between bars", center.x);
 	SmartDashboard::PutNumber("middle x value", 160);
 	//SmartDashboard::PutNumber("height", height); //240
 	//SmartDashboard::PutNumber("width", width); //320
