@@ -2,6 +2,13 @@
 #include "CameraServer.h"
 #include "Lib830.h"
 #include "AnalogGyro.h"
+#include <GripPipeline.h>
+#include <vision/VisionRunner.h>
+#include "vision/VisionPipeline.h"
+#include "thread"
+#include "unistd.h"
+#include "input/GamepadF310.h"
+#include "util/Algorithms.h"
 
 using namespace Lib830;
 
@@ -30,16 +37,68 @@ private:
 
 	frc::AnalogGyro *gyro;
 
-	CameraServer * camera;
 	LiveWindow *lw = LiveWindow::GetInstance();
 
+	SendableChooser<AutoMode*> *chooser;
 	static const int TICKS_TO_ACCEL = 10;
 
-	//auton chooser
-	SendableChooser<AutoMode*> *chooser;
 
 	void arcadeDrive(double speed, double turn, bool squaredinputs = false) {
 		drive->ArcadeDrive(speed, -turn, squaredinputs);
+	}
+
+	static void CameraPeriodic()
+	{
+		CameraServer * server;
+		grip::GripPipeline * pipeline;
+
+		pipeline = new grip::GripPipeline();
+
+		cs::UsbCamera camera;
+		cv::Mat image;
+		cv::Mat image_temp;
+		cv::Mat hsl_output;
+		int g_frame = 0;
+
+		cs::CvSink sink;
+		cs::CvSource outputStream;
+
+		server = CameraServer::GetInstance();
+
+		camera = server->StartAutomaticCapture();
+		camera.SetResolution(320,240);
+
+		sink = server->GetVideo();
+		outputStream = server->PutVideo("Processed", 400, 400);
+		//outputStream.
+		//camera.SetExposureManual(80);
+
+		while(1) {
+			bool working = sink.GrabFrame(image_temp);
+			SmartDashboard::PutBoolean("working", working);
+			/*if (set_exposure && !previous_exposure) {
+				camera.SetExposureManual(10);
+			}
+			else if(!set_exposure && previous_exposure) {
+				camera.SetExposureManual(80);
+			}
+			previous_exposure = set_exposure; */
+			if (working) {
+				g_frame ++;
+				image = image_temp;
+			}
+			if (g_frame < 1) {
+				continue;
+			}
+
+			//pipeline->hslThreshold(image, hue, sat, lum, hsl_output);
+			pipeline->Process(image);
+			//outputStream.PutFrame(*pipeline->gethslThresholdOutput());
+			outputStream.PutFrame(image);
+		}
+
+
+		//hue = SmartDashboard::GetNumber("P:", 0.075);
 	}
 
 	void RobotInit()
@@ -65,12 +124,23 @@ private:
 		chooser->AddObject("default", new AutoMode(NOTHING));
 		SmartDashboard::PutData("Auto Modes", chooser);
 		
-		//camera stuff
-		camera = CameraServer::GetInstance();
-		camera->StartAutomaticCapture();
+
+		std::thread visionThread(CameraPeriodic);
+		visionThread.detach();
 
 	}
 
+
+
+	/**
+	 * This autonomous (along with the chooser code above) shows how to select between different autonomous modes
+	 * using the dashboard. The sendable chooser code works with the Java SmartDashboard. If you prefer the LabVIEW
+	 * Dashboard, remove all of the chooser code and uncomment the GetString line to get the auto name from the text box
+	 * below the Gyro
+	 *
+	 * You can add additional auto modes by adding additional comparisons to the if-else structure below with additional strings.
+	 * If using the SendableChooser make sure to add them to the chooser code above as well.
+	 */
 	void AutonomousInit()
 	{
 		timer.Reset();
@@ -118,34 +188,44 @@ private:
 				arcadeDrive(0.0,turn, false);
 		}
 
-		//camera->StartAutomaticCapture();
 	}
 
 	void TeleopInit()
 	{
 		gyro->Reset();
+
 	}
 
 	void TeleopPeriodic()
 	{
-		float targetTurn = pilot->RightX();
-		float turn = accel(previousTurn, targetTurn, TICKS_TO_ACCEL);
-		previousTurn = turn;
 
-		float targetForward = pilot->LeftY();
-		float speed = accel(previousSpeed, targetForward, TICKS_TO_ACCEL);
+		float targetSpeed = pilot->LeftY();
+		float speed = accel(previousSpeed, targetSpeed, TICKS_TO_ACCEL);
 		previousSpeed = speed;
 
-		arcadeDrive(speed/1.5, turn/2.0, true);
 		double angle = gyro->GetAngle();
 
 		SmartDashboard::PutNumber("gyro angle", angle);
 
 
+		/*float targetTurn = pilot->LeftX();
+		float turn = Lib830::accel(previousTurn, targetTurn, 30);
+		previousTurn = targetTurn; */
+		double mid_point = SmartDashboard::GetNumber("x value between bars",0);
+		float targetTurn;
 
+		if (pilot ->ButtonState(Lib830::GamepadF310::BUTTON_RIGHT_BUMPER)) {
+			targetTurn = (160.0 - mid_point) /-60.0;
+		}
+		else {
+			targetTurn = pilot->RightX();
+		}
+		float turn = Lib830::accel(previousTurn, targetTurn, 10);
+		previousTurn = targetTurn;
+
+		arcadeDrive(speed/1.5, turn/2.0, true);
 
 	}
-
 	void TestPeriodic()
 	{
 		lw->Run();
