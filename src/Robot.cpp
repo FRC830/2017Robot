@@ -77,8 +77,6 @@ private:
 				continue;
 			}
 
-			//cvtColor(image, grey, CV_RGB2GRAY);
-
 			//pipeline->hslThreshold(image, hue, sat, lum, hsl_output);
 			pipeline->Process(image);
 			//outputStream.PutFrame(*pipeline->gethslThresholdOutput());
@@ -166,10 +164,15 @@ private:
 		/*float targetTurn = pilot->LeftX();
 		float turn = Lib830::accel(previousTurn, targetTurn, 30);
 		previousTurn = targetTurn; */
-
 		double mid_point = SmartDashboard::GetNumber("x value between bars",0);
+		float targetTurn;
 
-		float targetTurn = (160.0 - mid_point) /-60.0;
+		if (pilot ->ButtonState(Lib830::GamepadF310::BUTTON_RIGHT_BUMPER)) {
+			targetTurn = (160.0 - mid_point) /-60.0;
+		}
+		else {
+			targetTurn = pilot->LeftX();
+		}
 		float turn = Lib830::accel(previousTurn, targetTurn, 10);
 		previousTurn = targetTurn;
 

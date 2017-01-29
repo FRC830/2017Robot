@@ -21,6 +21,10 @@ GripPipeline::GripPipeline() {
 *
 */
 void GripPipeline::Process(cv::Mat &source0){
+	cv::Scalar color_3 (0,255,255);
+	cv::line(source0, cv::Point2f(160,0), cv::Point2f(160,240),color_3,2 );
+	cv::line(source0, cv::Point2f(0,120), cv::Point2f(320,120), color_3,2);
+
 	//Step HSL_Threshold0:
 	//input
 	cv::Mat hslThresholdInput = source0;
@@ -54,7 +58,6 @@ void GripPipeline::Process(cv::Mat &source0){
 
 	//DrawContours(source0,findContoursOutput,-1, color);
 
-	//DrawContours(source0,smoothContours,-1, color);
 
 	cv::Scalar color_2(255,255,0);
 	std::vector<cv::Rect> boundRect(smoothContours.size());
@@ -76,37 +79,100 @@ void GripPipeline::Process(cv::Mat &source0){
 	}
 
 	if (smoothContours.size() < 2 || boundRect.size() < 2) {
+		SmartDashboard::PutString("vision error", "too few contours");
 		return;
 	}
 	else {
 		std::sort(smoothContours.begin(), smoothContours.end(), FindContourArea);
-		boundRect.resize(2);
-		smoothContours.resize(2);
 	}
 
-	for (int i = 0; i < 2; i++ ) {
-		boundRect[i] = cv::boundingRect(cv::Mat(smoothContours[i]));
+	std::vector<double> areaCompare;
+
+	for (int i = 0; i < ((int)(smoothContours.size()) - 1); i ++) {
+		double area_1 = fabs(cv::contourArea(cv::Mat(smoothContours[i])));
+		double area_2 = fabs(cv::contourArea(cv::Mat(smoothContours[i + 1])));
+		double ratio = area_1 / area_2;
+		if (ratio < 1) {
+			ratio = 1 / ratio;
+		}
+//		boundRect[0] = cv::boundingRect(cv::Mat(smoothContours[i]));
+//		boundRect[1] = cv::boundingRect(cv::Mat(smoothContours[i + 1]));
+//
+//		if (boundRect.size() != 2) {
+//			return;
+//		}
+//		double left_1 = boundRect[0].tl().x;
+//		double left_2 = boundRect[1].tl().x;
+//
+//		if (left_2 < left_1) {
+//			std::swap(boundRect[0], boundRect[1]);
+//		}
+//		double height = boundRect[0].tl().y - boundRect[1].br().y;
+//
+
+		areaCompare.push_back(ratio);
 	}
+	auto smallest = std::min_element(std::begin(areaCompare), std::end(areaCompare));
+	int position = std::distance(std::begin(areaCompare), smallest);
 
 
-	for (int i = 0; i < (int)(smoothContours.size()); i++) {
-		cv::rectangle(source0, boundRect[i].tl(), boundRect[i].br(), color_2, 2);
+	if (areaCompare[position] > 1.35 ) {
+		SmartDashboard::PutString("vision error", "areas too different");
+		return;
 	}
+
+	boundRect.resize(2);
+	//smoothContours.resize(2);
+
+	boundRect[0] = cv::boundingRect(cv::Mat(smoothContours[position]));
+	boundRect[1] = cv::boundingRect(cv::Mat(smoothContours[position + 1]));
+
 
 	//DrawContours(source0, smoothContours,-1, color);
-
+	SmartDashboard::PutNumber("similarity ratio", areaCompare[position]);
 	SmartDashboard::PutNumber("ratio 1", double(boundRect[0].width)/ double(boundRect[0].height) );
 	SmartDashboard::PutNumber("ratio 2", double(boundRect[1].width)/double(boundRect[1].height) );
 
 	cv::Point center;
 
-	if (boundRect.size() == 2) {
-		cv::Point top_left = boundRect[0].tl();
-		cv::Point bottom_right = boundRect[1].br();
-		center = (top_left + bottom_right)/2;
-		cv::line(source0, top_left, bottom_right, color_2, 3);
-		cv::line(source0, center, center, color, 5);
+	if (boundRect.size() != 2) {
+		SmartDashboard::PutString("vision error", "wrong number of rectangles");
+		return;
 	}
+	double left_1 = boundRect[0].tl().x;
+	double left_2 = boundRect[1].tl().x;
+
+	if (left_2 < left_1) {
+		std::swap(boundRect[0], boundRect[1]);
+	}
+
+	cv::Point top_left = boundRect[0].tl();
+	cv::Point bottom_left (top_left.x, boundRect[1].br().y);
+
+	double height = top_left.y - bottom_left.y;
+
+	double second_ratio = fabs(height / boundRect[0].height);
+
+
+	if (second_ratio > 1) {
+		second_ratio = 1 / second_ratio;
+	}
+	SmartDashboard::PutNumber("second ratio", second_ratio);
+
+	if (fabs(second_ratio) < 0.75) {
+		SmartDashboard::PutString("vision error", "second ratio too small");
+		return;
+	}
+
+	for (int i = 0; i < (int)(boundRect.size()); i++) {
+		cv::rectangle(source0, boundRect[i].tl(), boundRect[i].br(), color_2, 2);
+	}
+
+
+	cv::Point bottom_right = boundRect[1].br();
+	center = (top_left + bottom_right)/2;
+	cv::line(source0, top_left, bottom_right, color_2, 3);
+	cv::line(source0, center, center, color, 5);
 
 	/*std::vector<cv::Moments> mu( smoothContours.size());
 	for (int i = 0; i < (int)(smoothContours.size()); i++) {
@@ -122,11 +188,7 @@ void GripPipeline::Process(cv::Mat &source0){
 
 
 
-	cv::Scalar color_3 (0,255,255);
-	cv::line(source0, cv::Point2f(160,0), cv::Point2f(160,240),color_3,2 );
-	cv::line(source0, cv::Point2f(0,120), cv::Point2f(320,120), color_3,2);
-
-
+	SmartDashboard::PutString("vision error", "");
 	SmartDashboard::PutNumber("x value between bars", center.x);
 	SmartDashboard::PutNumber("middle x value", 160);
 	//SmartDashboard::PutNumber("height", height); //240
@@ -199,6 +261,10 @@ std::vector<std::vector<cv::Point> >* GripPipeline::getfilterContoursOutput() {
 		double i = fabs(cv::contourArea(cv::Mat(contour1)));
 		double j = fabs(cv::contourArea(cv::Mat(contour2)));
 		return (i > j);
+	}
+
+	bool GripPipeline::sortSimiliary(std::vector<double> &i, std::vector<double> &j) {
+		return (i < j);
 	}
 
 	void GripPipeline::filterContourVertecies(std::vector <std::vector <cv::Point>> &contours, double maxVertexCount, double minVertexCount, std::vector<std::vector <cv::Point>> &output) {
