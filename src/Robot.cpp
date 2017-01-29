@@ -93,19 +93,19 @@ private:
 		switch(*chooser->GetSelected()){
 			case LEFT_SIDE:
 				if(time < 3){
-					drive->ArcadeDrive(0.5, -0.5, 1);
+					arcadeDrive(0.5, -0.5, 1);
 				}
 				break;
 
 			case RIGHT_SIDE:
 				if(time < 3){
-					drive->ArcadeDrive(0.5, 0.5, 1);
+					arcadeDrive(0.5, 0.5, 1);
 				}
 				break;
 
 			case CENTER:
-				if (time < 2.0){
-					drive->ArcadeDrive(0.5, turn, 1);
+				if (time < 2.75){
+					arcadeDrive(0.5, turn, 1);
 				}
 				break;
 
@@ -136,7 +136,7 @@ private:
 		float speed = accel(previousSpeed, targetForward, TICKS_TO_ACCEL);
 		previousSpeed = speed;
 
-		drive->ArcadeDrive(speed, -turn, true);
+		arcadeDrive(speed/1.5, turn/2.0, true);
 		double angle = gyro->GetAngle();
 
 		SmartDashboard::PutNumber("gyro angle", angle);
