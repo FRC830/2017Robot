@@ -21,12 +21,9 @@ GripPipeline::GripPipeline() {
 *
 */
 void GripPipeline::Process(cv::Mat &source0){
-	cv::Scalar color_3 (0,255,255);
-	cv::line(source0, cv::Point2f(160,0), cv::Point2f(160,240),color_3,2 );
-	cv::line(source0, cv::Point2f(0,120), cv::Point2f(320,120), color_3,2);
-
 	//Step HSL_Threshold0:
 	//input
+	SmartDashboard::PutBoolean("target acquired", false);
 	cv::Mat hslThresholdInput = source0;
 	/*double hslThresholdHue[] = {40, 80};
 	double hslThresholdSaturation[] = {57, 127};
@@ -116,7 +113,7 @@ void GripPipeline::Process(cv::Mat &source0){
 	int position = std::distance(std::begin(areaCompare), smallest);
 
 
-	if (areaCompare[position] > 1.35 ) {
+	if (areaCompare[position] > 1.40 ) {
 		SmartDashboard::PutString("vision error", "areas too different");
 		return;
 	}
@@ -186,10 +183,13 @@ void GripPipeline::Process(cv::Mat &source0){
 	cv::Point mid_point = (mc[0] + mc[1])/2;
 	cv::line(source0, mid_point, mid_point,color_2,5 ); */
 
-
+	cv::Scalar color_3 (0,255,255);
+	cv::line(source0, cv::Point2f(160,0), cv::Point2f(160,240),color_3,2 );
+	cv::line(source0, cv::Point2f(0,120), cv::Point2f(320,120), color_3,2);
 
 	SmartDashboard::PutString("vision error", "");
 	SmartDashboard::PutNumber("x value between bars", center.x);
+	SmartDashboard::PutBoolean("target acquired", true);
 	SmartDashboard::PutNumber("middle x value", 160);
 	//SmartDashboard::PutNumber("height", height); //240
 	//SmartDashboard::PutNumber("width", width); //320

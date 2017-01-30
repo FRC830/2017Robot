@@ -141,6 +141,35 @@ private:
 	 * You can add additional auto modes by adding additional comparisons to the if-else structure below with additional strings.
 	 * If using the SendableChooser make sure to add them to the chooser code above as well.
 	 */
+	float ProcessTargetTurn() {
+		float turn = 0.0;
+		if (SmartDashboard::GetBoolean("target acquired", false) == true) {
+			float center = 160;
+			float mid_point = SmartDashboard::GetNumber("x value between bars",center);
+			turn = (center - mid_point) / -60;
+
+			float max_turn_speed = 0.6;
+			float min_turn_speed = 0.3;
+
+			if (fabs(turn) < min_turn_speed) {
+				if (turn < 0) {
+					turn = -min_turn_speed;
+				}
+				else {
+					turn = min_turn_speed;
+				}
+			}
+			else if (fabs(turn) > max_turn_speed) {
+				if (turn < 0) {
+					turn = -max_turn_speed;
+				}
+				else {
+					turn = max_turn_speed;
+				}
+			}
+		}
+		return turn;
+	}
 	void AutonomousInit()
 	{
 		timer.Reset();
@@ -159,35 +188,43 @@ private:
 		double angle = gyro->GetAngle();
 		double turn = angle /-17.0;
 
+		float processed_turn = ProcessTargetTurn();
+		arcadeDrive(0.0, 0.0);
 
-		switch(*chooser->GetSelected()){
-			case LEFT_SIDE:
-				if(time < 3){
-					arcadeDrive(0.5, -0.5, 1);
-				}
-				break;
+		AutoMode mode = BASELINE;
 
-			case RIGHT_SIDE:
-				if(time < 3){
-					arcadeDrive(0.5, 0.5, 1);
-				}
-				break;
-
-			case CENTER:
-				if (time < 2.75){
-					arcadeDrive(0.5, turn, 1);
-				}
-				break;
-
-			case BASELINE:
-				if (time < 5){
-					arcadeDrive(0.5, turn, 1);
-				}
-				break;
-			default:
-				arcadeDrive(0.0,turn, false);
+		if(chooser->GetSelected()) {
+			mode = *chooser->GetSelected();
 		}
 
+		if ( mode == LEFT_SIDE || mode == RIGHT_SIDE || mode == CENTER) {
+			if (time < 2) {
+				arcadeDrive(0.5, turn);
+			}
+			else if (time >= 2 && time < 3) {
+				float speed = 0;
+				if (processed_turn !=0) {
+					turn = processed_turn;
+					speed = 0.5;
+				}
+				else if (mode == LEFT_SIDE) {
+					turn = (angle - 30) / 15.0;
+				}
+				else if (mode == RIGHT_SIDE) {
+					turn = (angle + 30) / 15.0;
+				}
+				arcadeDrive(speed, turn, false);
+			}
+			else if(time < 5) {
+				if (mode == LEFT_SIDE || mode == RIGHT_SIDE) {
+					arcadeDrive(0.5, processed_turn);
+				}
+			}
+		}
+		else if (mode == BASELINE) {
+			if (time < 3)
+				arcadeDrive(0.5, turn, false);
+		}
 	}
 
 	void TeleopInit()
@@ -203,6 +240,7 @@ private:
 		float speed = accel(previousSpeed, targetSpeed, TICKS_TO_ACCEL);
 		previousSpeed = speed;
 
+
 		double angle = gyro->GetAngle();
 
 		SmartDashboard::PutNumber("gyro angle", angle);
@@ -211,16 +249,16 @@ private:
 		/*float targetTurn = pilot->LeftX();
 		float turn = Lib830::accel(previousTurn, targetTurn, 30);
 		previousTurn = targetTurn; */
-		double mid_point = SmartDashboard::GetNumber("x value between bars",0);
 		float targetTurn;
 
 		if (pilot ->ButtonState(Lib830::GamepadF310::BUTTON_RIGHT_BUMPER)) {
-			targetTurn = (160.0 - mid_point) /-60.0;
+			targetTurn = ProcessTargetTurn();
 		}
 		else {
 			targetTurn = pilot->RightX();
 		}
-		float turn = Lib830::accel(previousTurn, targetTurn, 10);
+
+		float turn = accel(previousTurn, targetTurn, 10);
 		previousTurn = targetTurn;
 
 		arcadeDrive(speed/1.5, turn/2.0, true);
@@ -230,6 +268,10 @@ private:
 	{
 		lw->Run();
 	}
+	/*void RobotPeriodic() {
+		float angle = gyro->GetAngle();
+		SmartDashboard::PutNumber("gyro angle", angle);
+	}*/
 };
 
 START_ROBOT_CLASS(Robot)
