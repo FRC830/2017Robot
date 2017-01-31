@@ -148,8 +148,8 @@ private:
 			float mid_point = SmartDashboard::GetNumber("x value between bars",center);
 			turn = (center - mid_point) / -60;
 
-			float max_turn_speed = 0.6;
-			float min_turn_speed = 0.3;
+			float max_turn_speed = 0.2;
+			float min_turn_speed = 0.1;
 
 			if (fabs(turn) < min_turn_speed) {
 				if (turn < 0) {
@@ -197,21 +197,21 @@ private:
 			mode = *chooser->GetSelected();
 		}
 
-		if ( mode == LEFT_SIDE || mode == RIGHT_SIDE || mode == CENTER) {
+		if (mode == LEFT_SIDE || mode == RIGHT_SIDE || mode == CENTER) {
 			if (time < 2) {
-				arcadeDrive(0.5, turn);
+				arcadeDrive(0.4, turn);
 			}
-			else if (time >= 2 && time < 3) {
+			else if (time >= 2 && time < 4) {
 				float speed = 0;
 				if (processed_turn !=0) {
 					turn = processed_turn;
-					speed = 0.5;
+					speed = 0.2;
 				}
 				else if (mode == LEFT_SIDE) {
-					turn = (angle - 30) / 15.0;
+					turn = (angle - 30) / 150.0;
 				}
 				else if (mode == RIGHT_SIDE) {
-					turn = (angle + 30) / 15.0;
+					turn = (angle + 30) / 150.0;
 				}
 				arcadeDrive(speed, turn, false);
 			}
