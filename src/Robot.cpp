@@ -27,6 +27,7 @@ private:
 
 	static const int ANALOG_GYRO = 0;
 
+
 	//drivetrain
 	RobotDrive * drive;
 
@@ -141,15 +142,15 @@ private:
 	 * You can add additional auto modes by adding additional comparisons to the if-else structure below with additional strings.
 	 * If using the SendableChooser make sure to add them to the chooser code above as well.
 	 */
-	float ProcessTargetTurn() {
+	float ProcessTargetTurn(float min_turn) {
 		float turn = 0.0;
 		if (SmartDashboard::GetBoolean("target acquired", false) == true) {
 			float center = 160;
 			float mid_point = SmartDashboard::GetNumber("x value between bars",center);
 			turn = (center - mid_point) / -60;
 
-			float max_turn_speed = 0.2;
-			float min_turn_speed = 0.1;
+			float max_turn_speed = 0.6;
+			float min_turn_speed = min_turn;
 
 			if (fabs(turn) < min_turn_speed) {
 				if (turn < 0) {
@@ -186,9 +187,9 @@ private:
 		float time = timer.Get();
 
 		double angle = gyro->GetAngle();
-		double turn = angle /-17.0;
+		float turn = angle /-17.0;
 
-		float processed_turn = ProcessTargetTurn();
+		float processed_turn = ProcessTargetTurn(0.3);
 		arcadeDrive(0.0, 0.0);
 
 		AutoMode mode = BASELINE;
@@ -199,13 +200,13 @@ private:
 
 		if (mode == LEFT_SIDE || mode == RIGHT_SIDE || mode == CENTER) {
 			if (time < 2) {
-				arcadeDrive(0.4, turn);
+				arcadeDrive(0.3, turn);
 			}
 			else if (time >= 2 && time < 4) {
 				float speed = 0;
 				if (processed_turn !=0) {
 					turn = processed_turn;
-					speed = 0.2;
+					speed = 0.3;
 				}
 				else if (mode == LEFT_SIDE) {
 					turn = (angle - 30) / 150.0;
@@ -213,7 +214,7 @@ private:
 				else if (mode == RIGHT_SIDE) {
 					turn = (angle + 30) / 150.0;
 				}
-				arcadeDrive(speed, turn, false);
+				arcadeDrive(speed, turn/2.0, false);
 			}
 			else if(time < 5) {
 				if (mode == LEFT_SIDE || mode == RIGHT_SIDE) {
@@ -225,6 +226,7 @@ private:
 			if (time < 3)
 				arcadeDrive(0.5, turn, false);
 		}
+		SmartDashboard::PutNumber("processed turn", processed_turn);
 	}
 
 	void TeleopInit()
@@ -252,7 +254,7 @@ private:
 		float targetTurn;
 
 		if (pilot ->ButtonState(Lib830::GamepadF310::BUTTON_RIGHT_BUMPER)) {
-			targetTurn = ProcessTargetTurn();
+			targetTurn = ProcessTargetTurn(0.4);
 		}
 		else {
 			targetTurn = pilot->RightX();
