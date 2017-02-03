@@ -24,13 +24,14 @@ private:
 	static const int LEFT_PWM_TWO = 8;
 	static const int RIGHT_PWM_ONE = 0;
 	static const int RIGHT_PWM_TWO = 1;
+	static const int CLIMBER_PWM = 3;
 
 	static const int ANALOG_GYRO = 0;
 
 
 	//drivetrain
 	RobotDrive * drive;
-
+	Spark* climber;
 	GamepadF310 * pilot;
 	GamepadF310 * copilot;
 
@@ -113,6 +114,7 @@ private:
 
 		pilot = new GamepadF310(0);
 		copilot = new GamepadF310(1);
+		climber = new Spark(CLIMBER_PWM);
 
 		gyro = new frc::AnalogGyro(ANALOG_GYRO);
 
@@ -264,6 +266,7 @@ private:
 		previousTurn = targetTurn;
 
 		arcadeDrive(speed/1.5, turn/2.0, true);
+		climber->Set(copilot->LeftTrigger()-copilot->RightTrigger());
 
 	}
 	void TestPeriodic()
