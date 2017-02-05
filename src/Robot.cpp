@@ -112,20 +112,20 @@ private:
 
 	void RobotInit()
 	{
-		/*drive = new RobotDrive(
+		drive = new RobotDrive(
 			new VictorSP(LEFT_PWM_ONE),
 			new VictorSP(LEFT_PWM_TWO),
 			new VictorSP(RIGHT_PWM_ONE),
 			new VictorSP(RIGHT_PWM_TWO)
-		); */
+		);
 
 		LED = new DigitalLED(RED_LED_DIO, GREEN_LED_DIO, BLUE_LED_DIO);
 		LED->Set(1, 0, 0.5);
 
-		drive = new RobotDrive(
+		/*drive = new RobotDrive(
 			new VictorSP(LEFT_PWM_TWO), //8
 			new VictorSP(LEFT_PWM_ONE) //9
-		);
+		); */
 
 		pilot = new GamepadF310(0);
 		copilot = new GamepadF310(1);
