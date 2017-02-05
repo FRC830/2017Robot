@@ -28,9 +28,14 @@ private:
 
 	static const int ANALOG_GYRO = 0;
 
+	static const int RED_LED_DIO = 5;
+	static const int GREEN_LED_DIO = 6;
+	static const int BLUE_LED_DIO = 7;
+
 
 	//drivetrain
 	RobotDrive * drive;
+
 	Spark* climber;
 	GamepadF310 * pilot;
 	GamepadF310 * copilot;
@@ -40,6 +45,8 @@ private:
 	frc::AnalogGyro *gyro;
 
 	LiveWindow *lw = LiveWindow::GetInstance();
+
+	DigitalLED * LED;
 
 	SendableChooser<AutoMode*> *chooser;
 	static const int TICKS_TO_ACCEL = 10;
@@ -105,11 +112,19 @@ private:
 
 	void RobotInit()
 	{
-		drive = new RobotDrive(
+		/*drive = new RobotDrive(
 			new VictorSP(LEFT_PWM_ONE),
 			new VictorSP(LEFT_PWM_TWO),
 			new VictorSP(RIGHT_PWM_ONE),
 			new VictorSP(RIGHT_PWM_TWO)
+		); */
+
+		LED = new DigitalLED(RED_LED_DIO, GREEN_LED_DIO, BLUE_LED_DIO);
+		LED->Set(1, 0, 0.5);
+
+		drive = new RobotDrive(
+			new VictorSP(LEFT_PWM_TWO), //8
+			new VictorSP(LEFT_PWM_ONE) //9
 		);
 
 		pilot = new GamepadF310(0);
@@ -127,9 +142,9 @@ private:
 		chooser->AddObject("default", new AutoMode(NOTHING));
 		SmartDashboard::PutData("Auto Modes", chooser);
 		
-
 		std::thread visionThread(CameraPeriodic);
 		visionThread.detach();
+
 
 	}
 
@@ -234,6 +249,8 @@ private:
 	void TeleopInit()
 	{
 		gyro->Reset();
+		LED->Disable();
+
 
 	}
 
@@ -268,15 +285,29 @@ private:
 		arcadeDrive(speed/1.5, turn/2.0, true);
 		climber->Set(copilot->LeftTrigger()-copilot->RightTrigger());
 
+		LED->SetAllianceColor();
+		if (copilot->ButtonState(GamepadF310::BUTTON_B)) {
+			LED->Set(0,1,0);
+		}
+//		LED->Set(copilot->LeftTrigger(), copilot->RightTrigger(), fabs(copilot->LeftY()));
 	}
 	void TestPeriodic()
 	{
 		lw->Run();
 	}
-	/*void RobotPeriodic() {
-		float angle = gyro->GetAngle();
-		SmartDashboard::PutNumber("gyro angle", angle);
-	}*/
+	void DisabledInit() {
+		timer.Start();
+	}
+	void DisabledPeriodic() {
+		arcadeDrive(0.0,0.0);
+		DigitalLED::Color imperfectYellow = {1,0.6,0};
+		LED->Alternate(imperfectYellow, {0,0,1});
+
+	}
+	void RobotPeriodic() {
+		//float angle = gyro->GetAngle();
+		//SmartDashboard::PutNumber("gyro angle", angle);
+	}
 };
 
 START_ROBOT_CLASS(Robot)
