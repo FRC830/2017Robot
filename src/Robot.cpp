@@ -257,7 +257,7 @@ private:
 	void TeleopPeriodic()
 	{
 
-		float targetSpeed = pilot->LeftY();
+		float targetSpeed = -pilot->LeftY();
 		float speed = accel(previousSpeed, targetSpeed, TICKS_TO_ACCEL);
 		previousSpeed = speed;
 
