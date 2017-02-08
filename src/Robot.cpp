@@ -20,10 +20,10 @@ public:
 	enum AutoMode {LEFT_SIDE, RIGHT_SIDE, CENTER, BASELINE, NOTHING};
 private:
 	//drivetrain motors
-	static const int LEFT_PWM_ONE = 9;
-	static const int LEFT_PWM_TWO = 8;
-	static const int RIGHT_PWM_ONE = 0;
-	static const int RIGHT_PWM_TWO = 1;
+	static const int LEFT_PWM_ONE = 0;
+	static const int LEFT_PWM_TWO = 1;
+	static const int RIGHT_PWM_ONE = 9;
+	static const int RIGHT_PWM_TWO = 8;
 	static const int CLIMBER_PWM = 3;
 
 	static const int ANALOG_GYRO = 0;
@@ -164,9 +164,9 @@ private:
 		if (SmartDashboard::GetBoolean("target acquired", false) == true) {
 			float center = 160;
 			float mid_point = SmartDashboard::GetNumber("x value between bars",center);
-			turn = (center - mid_point) / -60;
+			turn = (center - mid_point) / -140;
 
-			float max_turn_speed = 0.6;
+			float max_turn_speed = 0.4;
 			float min_turn_speed = min_turn;
 
 			if (fabs(turn) < min_turn_speed) {
@@ -186,6 +186,7 @@ private:
 				}
 			}
 		}
+		SmartDashboard::PutNumber("process turn speed", turn);
 		return turn;
 	}
 	void AutonomousInit()
@@ -206,7 +207,7 @@ private:
 		double angle = gyro->GetAngle();
 		float turn = angle /-17.0;
 
-		float processed_turn = ProcessTargetTurn(0.3);
+		float processed_turn = ProcessTargetTurn(0.1);
 		arcadeDrive(0.0, 0.0);
 
 		AutoMode mode = BASELINE;
@@ -219,11 +220,11 @@ private:
 			if (time < 2) {
 				arcadeDrive(0.3, turn);
 			}
-			else if (time >= 2 && time < 4) {
-				float speed = 0;
+			else if (time >= 2 && time < 5) {
+				float speed = 0.3;
 				if (processed_turn !=0) {
 					turn = processed_turn;
-					speed = 0.3;
+					//speed = 0.3;
 				}
 				else if (mode == LEFT_SIDE) {
 					turn = (angle - 30) / 150.0;
@@ -231,7 +232,7 @@ private:
 				else if (mode == RIGHT_SIDE) {
 					turn = (angle + 30) / 150.0;
 				}
-				arcadeDrive(speed, turn/2.0, false);
+				arcadeDrive(speed, turn, false);
 			}
 			else if(time < 5) {
 				if (mode == LEFT_SIDE || mode == RIGHT_SIDE) {
@@ -257,10 +258,9 @@ private:
 	void TeleopPeriodic()
 	{
 
-		float targetSpeed = -pilot->LeftY();
+		float targetSpeed = pilot->LeftY();
 		float speed = accel(previousSpeed, targetSpeed, TICKS_TO_ACCEL);
 		previousSpeed = speed;
-
 
 		double angle = gyro->GetAngle();
 
@@ -273,16 +273,21 @@ private:
 		float targetTurn;
 
 		if (pilot ->ButtonState(Lib830::GamepadF310::BUTTON_RIGHT_BUMPER)) {
-			targetTurn = ProcessTargetTurn(0.4);
+			targetTurn = ProcessTargetTurn(0.1);
+		}
+		else if (fabs(pilot->RightY()) > 0.5) {
+			targetTurn = -angle/10.0;
 		}
 		else {
-			targetTurn = pilot->RightX();
+			targetTurn = pilot->RightX()/1.5;
+			gyro->Reset();
 		}
 
 		float turn = accel(previousTurn, targetTurn, 10);
 		previousTurn = targetTurn;
+		SmartDashboard::PutNumber("real turn", turn);
 
-		arcadeDrive(speed/1.5, turn/2.0, true);
+		arcadeDrive(speed/1.25, turn, false);
 		climber->Set(copilot->LeftTrigger()-copilot->RightTrigger());
 
 		LED->SetAllianceColor();
@@ -307,6 +312,7 @@ private:
 	void RobotPeriodic() {
 		//float angle = gyro->GetAngle();
 		//SmartDashboard::PutNumber("gyro angle", angle);
+		SmartDashboard::PutNumber("right y", pilot->LeftY());
 	}
 };
 
