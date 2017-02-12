@@ -57,16 +57,24 @@ void GripPipeline::Process(cv::Mat &source0){
 
 
 	cv::Scalar color_2(255,255,0);
+	cv::Scalar test_color(100,30,223);
 	std::vector<cv::Rect> boundRect(smoothContours.size());
 
-
+//	std::vector<cv::Rect> testRect(findContoursOutput.size());
+//
+//	DrawContours(source0, findContoursOutput, -1, test_color);
+//	for (int i = 0; i < (int)(findContoursOutput.size()); i++) {
+//		testRect[i] = cv::boundingRect(cv::Mat (findContoursOutput[i]));
+//		cv::rectangle(source0, testRect[i].tl(),testRect[i].br(), color_2,2);
+//
+//	}
 
 	for (int i = 0; i < (int)(smoothContours.size()); /*nothing*/) {
 		boundRect[i] = cv::boundingRect(cv::Mat(smoothContours[i]));
 		double width = boundRect[i].width;
 		double height = boundRect[i].height;
 		double ratio = width/height;
-		if ( ratio < 0.30 || ratio > 0.55) {
+		if ( ratio < 0.30 || ratio > 0.60) {
 			smoothContours.erase (smoothContours.begin() + i);
 			boundRect.erase(boundRect.begin() + i);
 		}
