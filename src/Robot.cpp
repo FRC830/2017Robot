@@ -32,6 +32,8 @@ private:
 	static const int GREEN_LED_DIO = 6;
 	static const int BLUE_LED_DIO = 7;
 
+	static const int GEAR_SWITCH_DIO = 0;
+
 
 	//drivetrain
 	RobotDrive * drive;
@@ -47,6 +49,8 @@ private:
 	LiveWindow *lw = LiveWindow::GetInstance();
 
 	DigitalLED * LED;
+
+	DigitalOutput * gearSwtich;
 
 	SendableChooser<AutoMode*> *chooser;
 	static const int TICKS_TO_ACCEL = 10;
@@ -132,6 +136,8 @@ private:
 		climber = new Spark(CLIMBER_PWM);
 
 		gyro = new frc::AnalogGyro(ANALOG_GYRO);
+
+		gearSwtich = new DigitalOutput(GEAR_SWITCH_DIO);
 
 		//autonChooser
 		chooser = new SendableChooser<AutoMode*>();
@@ -259,6 +265,9 @@ private:
 	{
 
 		float targetSpeed = pilot->LeftY();
+		if (fabs(targetSpeed) < 0.1) {
+			targetSpeed = 0;
+		}
 		float speed = accel(previousSpeed, targetSpeed, TICKS_TO_ACCEL);
 		previousSpeed = speed;
 
@@ -294,6 +303,8 @@ private:
 		if (copilot->ButtonState(GamepadF310::BUTTON_B)) {
 			LED->Set(0,1,0);
 		}
+
+		SmartDashboard::PutBoolean("Gear in holder", gearSwtich->Get());
 //		LED->Set(copilot->LeftTrigger(), copilot->RightTrigger(), fabs(copilot->LeftY()));
 	}
 	void TestPeriodic()
