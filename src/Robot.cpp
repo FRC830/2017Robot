@@ -223,20 +223,23 @@ private:
 		}
 
 		if (mode == LEFT_SIDE || mode == RIGHT_SIDE || mode == CENTER) {
+			float speed = 0.3;
 			if (time < 2) {
-				arcadeDrive(0.3, turn);
+				if (mode != CENTER) {
+					speed = 0.6;
+				}
+				arcadeDrive(speed, turn);
 			}
 			else if (time >= 2 && time < 5) {
-				float speed = 0.3;
 				if (processed_turn !=0) {
 					turn = processed_turn;
 					//speed = 0.3;
 				}
 				else if (mode == LEFT_SIDE) {
-					turn = (angle - 30) / 150.0;
+					turn = (angle - 60) / -60.0; //opposite turn angle
 				}
 				else if (mode == RIGHT_SIDE) {
-					turn = (angle + 30) / 150.0;
+					turn = (angle + 30) / -60.0;
 				}
 				arcadeDrive(speed, turn, false);
 			}
@@ -248,9 +251,12 @@ private:
 		}
 		else if (mode == BASELINE) {
 			if (time < 3)
-				arcadeDrive(0.5, turn, false);
+				arcadeDrive(0.2, turn, false);
 		}
 		SmartDashboard::PutNumber("processed turn", processed_turn);
+		SmartDashboard::PutNumber("time", time);
+		SmartDashboard::PutNumber("gyro angle", angle);
+
 	}
 
 	void TeleopInit()
@@ -265,7 +271,7 @@ private:
 	{
 
 		float targetSpeed = pilot->LeftY();
-		if (fabs(targetSpeed) < 0.1) {
+		if (fabs(targetSpeed) < 0.13) {
 			targetSpeed = 0;
 		}
 		float speed = accel(previousSpeed, targetSpeed, TICKS_TO_ACCEL);
@@ -324,6 +330,9 @@ private:
 		//float angle = gyro->GetAngle();
 		//SmartDashboard::PutNumber("gyro angle", angle);
 		SmartDashboard::PutNumber("right y", pilot->LeftY());
+		float angle = gyro->GetAngle();
+		SmartDashboard::PutNumber("gyro angle", angle);
+
 	}
 };
 
