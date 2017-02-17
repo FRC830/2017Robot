@@ -11,11 +11,12 @@
 
 class Shooter {
 public:
-	Shooter(VictorSP * intakeMotor, VictorSP* shooterMotor /*probably some sort of swtich*/);
+	Shooter(VictorSP * intakeMotor, VictorSP* shooterMotor, DigitalOutput* ballCounter /*probably some sort of swtich*/);
 	VictorSP * intake;
 	VictorSP * shooter;
+	DigitalOutput * ballCount;
 
-	enum State {NOTHING, INTAKE, SHOOTING};
+	enum State {NOTHING, INTAKE, TOINTAKE, SHOOTING};
 
 	bool hasBall();
 
@@ -28,6 +29,9 @@ public:
 	State state;
 
 	virtual ~Shooter();
+private:
+	void startTimer();
+	int numberOfBalls = 0;
 };
 
 #endif /* SHOOTER_H_ */

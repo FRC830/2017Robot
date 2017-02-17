@@ -151,7 +151,6 @@ private:
 		std::thread visionThread(CameraPeriodic);
 		visionThread.detach();
 
-
 	}
 
 
@@ -287,7 +286,7 @@ private:
 		previousTurn = targetTurn; */
 		float targetTurn;
 
-		if (pilot ->ButtonState(Lib830::GamepadF310::BUTTON_RIGHT_BUMPER)) {
+		if (pilot->ButtonState(Lib830::GamepadF310::BUTTON_RIGHT_BUMPER)) {
 			targetTurn = ProcessTargetTurn(0.1);
 		}
 		else if (fabs(pilot->RightY()) > 0.5) {
@@ -303,6 +302,7 @@ private:
 		SmartDashboard::PutNumber("real turn", turn);
 
 		arcadeDrive(speed/1.25, turn, false);
+
 		climber->Set(copilot->LeftTrigger()-copilot->RightTrigger());
 
 		LED->SetAllianceColor();
@@ -329,7 +329,7 @@ private:
 	void RobotPeriodic() {
 		//float angle = gyro->GetAngle();
 		//SmartDashboard::PutNumber("gyro angle", angle);
-		SmartDashboard::PutNumber("right y", pilot->LeftY());
+		SmartDashboard::PutNumber("left y", pilot->LeftY());
 		float angle = gyro->GetAngle();
 		SmartDashboard::PutNumber("gyro angle", angle);
 
