@@ -17,7 +17,7 @@ class Robot: public IterativeRobot
 	float previousTurn = 0;
 	float previousSpeed = 0;
 public:
-	enum AutoMode {LEFT_SIDE, RIGHT_SIDE, CENTER, BASELINE, NOTHING};
+	enum AutoMode {LEFT_SIDE, RIGHT_SIDE, CENTER, BASELINE, NOTHING, BAD_GYRO};
 private:
 	//drivetrain motors
 	static const int LEFT_PWM_ONE = 0;
@@ -220,9 +220,10 @@ private:
 		if(chooser->GetSelected()) {
 			mode = *chooser->GetSelected();
 		}
+		float speed;
 
 		if (mode == LEFT_SIDE || mode == RIGHT_SIDE || mode == CENTER) {
-			float speed = 0.3;
+			speed = 0.3;
 			if (time < 2) {
 				if (mode != CENTER) {
 					speed = 0.6;
@@ -251,6 +252,19 @@ private:
 		else if (mode == BASELINE) {
 			if (time < 3)
 				arcadeDrive(0.2, turn, false);
+		}
+		else if (mode == BAD_GYRO) {
+			speed = 0.3;
+			if (time < 2) {
+				turn = -0.2;
+				arcadeDrive(speed, turn, false);
+			}
+			else if (time > 2 && time <= 5) {
+				if (processed_turn != 0) {
+					turn = processed_turn;
+				}
+				arcadeDrive(speed, turn, false);
+			}
 		}
 		SmartDashboard::PutNumber("processed turn", processed_turn);
 		SmartDashboard::PutNumber("time", time);
@@ -289,7 +303,7 @@ private:
 		if (pilot->ButtonState(Lib830::GamepadF310::BUTTON_RIGHT_BUMPER)) {
 			targetTurn = ProcessTargetTurn(0.1);
 		}
-		else if (fabs(pilot->RightY()) > 0.5) {
+		else if (fabs(pilot->LeftTrigger()) > 0.5) {
 			targetTurn = -angle/10.0;
 		}
 		else {
@@ -301,13 +315,15 @@ private:
 		previousTurn = targetTurn;
 		SmartDashboard::PutNumber("real turn", turn);
 
-		arcadeDrive(speed/1.25, turn, false);
+		arcadeDrive(speed, turn, false);
 
 		climber->Set(copilot->LeftTrigger()-copilot->RightTrigger());
 
-		LED->SetAllianceColor();
+		//LED->SetAllianceColor();
+		LED->Set(0,1,0);
 		if (copilot->ButtonState(GamepadF310::BUTTON_B)) {
 			LED->Set(0,1,0);
+
 		}
 
 		SmartDashboard::PutBoolean("Gear in holder", gearSwtich->Get());
@@ -324,14 +340,17 @@ private:
 		arcadeDrive(0.0,0.0);
 		DigitalLED::Color imperfectYellow = {1,0.6,0};
 		LED->Alternate(imperfectYellow, {0,0,1});
+		float angle = gyro->GetAngle();
+		SmartDashboard::PutNumber("gyro angle", angle);
 
 	}
 	void RobotPeriodic() {
 		//float angle = gyro->GetAngle();
 		//SmartDashboard::PutNumber("gyro angle", angle);
 		SmartDashboard::PutNumber("left y", pilot->LeftY());
-		float angle = gyro->GetAngle();
-		SmartDashboard::PutNumber("gyro angle", angle);
+		SmartDashboard::PutData("gryo", gyro);
+		//float angle = gyro->GetAngle();
+		//SmartDashboard::PutNumber("gyro angle", angle);
 
 	}
 };
