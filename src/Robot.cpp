@@ -9,6 +9,7 @@
 #include "unistd.h"
 #include "input/GamepadF310.h"
 #include "util/Algorithms.h"
+#include "math.h"
 
 using namespace Lib830;
 
@@ -57,6 +58,8 @@ private:
 
 
 	void arcadeDrive(double speed, double turn, bool squaredinputs = false) {
+		SmartDashboard::PutNumber("speed", speed);
+		SmartDashboard::PutNumber("turn", turn);
 		drive->ArcadeDrive(speed, -turn, squaredinputs);
 	}
 
@@ -85,6 +88,7 @@ private:
 		outputStream = server->PutVideo("Processed", 400, 400);
 		//outputStream.
 		//camera.SetExposureManual(80);
+
 
 		while(1) {
 			bool working = sink.GrabFrame(image_temp);
@@ -146,6 +150,7 @@ private:
 		chooser->AddObject("Right Side", new AutoMode(RIGHT_SIDE));
 		chooser->AddObject("Center", new AutoMode(CENTER));
 		chooser->AddObject("default", new AutoMode(NOTHING));
+		chooser->AddObject("bad gyro", new AutoMode(BAD_GYRO));
 		SmartDashboard::PutData("Auto Modes", chooser);
 		
 		std::thread visionThread(CameraPeriodic);
@@ -171,7 +176,7 @@ private:
 			float mid_point = SmartDashboard::GetNumber("x value between bars",center);
 			turn = (center - mid_point) / -140;
 
-			float max_turn_speed = 0.4;
+			float max_turn_speed = 0.3;
 			float min_turn_speed = min_turn;
 
 			if (fabs(turn) < min_turn_speed) {
@@ -205,32 +210,41 @@ private:
 
 	}
 
+	const float WEIGHT_AFTER_ONE_SECOND = .001;
+
+	float prev_time = 0;
+	float prev_speed = 0;
+	float prev_turn = 0;
+
 	void AutonomousPeriodic()
 	{
 		float time = timer.Get();
+		//float prev_weight = pow(WEIGHT_AFTER_ONE_SECOND, time - prev_time);
+		prev_time = time;
+
+		float speed = 0;
 
 		double angle = gyro->GetAngle();
 		float turn = angle /-17.0;
 
 		float processed_turn = ProcessTargetTurn(0.1);
-		arcadeDrive(0.0, 0.0);
+		//arcadeDrive(0.0, 0.0);
 
 		AutoMode mode = BASELINE;
 
 		if(chooser->GetSelected()) {
 			mode = *chooser->GetSelected();
 		}
-		float speed;
 
 		if (mode == LEFT_SIDE || mode == RIGHT_SIDE || mode == CENTER) {
 			speed = 0.3;
-			if (time < 2) {
+			if (time < 1) {
 				if (mode != CENTER) {
 					speed = 0.6;
 				}
 				arcadeDrive(speed, turn);
 			}
-			else if (time >= 2 && time < 5) {
+			else if (time >= 1 && time < 7) {
 				if (processed_turn !=0) {
 					turn = processed_turn;
 					//speed = 0.3;
@@ -256,12 +270,15 @@ private:
 		else if (mode == BAD_GYRO) {
 			speed = 0.3;
 			if (time < 2) {
-				turn = -0.2;
+				turn = 0.2;
 				arcadeDrive(speed, turn, false);
 			}
-			else if (time > 2 && time <= 5) {
+			else if (time > 2 && time <= 6) {
 				if (processed_turn != 0) {
 					turn = processed_turn;
+				}
+				else {
+					turn = 0;
 				}
 				arcadeDrive(speed, turn, false);
 			}
