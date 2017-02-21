@@ -21,11 +21,16 @@ public:
 	enum AutoMode {LEFT_SIDE, RIGHT_SIDE, CENTER, BASELINE, NOTHING, BAD_GYRO};
 private:
 	//drivetrain motors
-	static const int LEFT_PWM_ONE = 0;
+	static const int LEFT_PWM_ONE = 0; // 0 is 10 on electrical board
 	static const int LEFT_PWM_TWO = 1;
 	static const int RIGHT_PWM_ONE = 9;
 	static const int RIGHT_PWM_TWO = 8;
-	static const int CLIMBER_PWM = 3;
+
+	static const int CLIMBER_PWM = 3; //CB
+	static const int BALL_OUTPUTPWM = 2;
+
+	static const int SHOOTER_PWM =  5;//SH
+	static const int INTAKE_PWM = 7;//IT
 
 	static const int ANALOG_GYRO = 0;
 
@@ -33,13 +38,14 @@ private:
 	static const int GREEN_LED_DIO = 6;
 	static const int BLUE_LED_DIO = 7;
 
-	static const int GEAR_SWITCH_DIO = 0;
+	static const int CLIMBING_SWITCH_DIO = 0;
 
 
 	//drivetrain
 	RobotDrive * drive;
 
 	Spark* climber;
+
 	GamepadF310 * pilot;
 	GamepadF310 * copilot;
 
@@ -51,13 +57,17 @@ private:
 
 	DigitalLED * LED;
 
-	DigitalOutput * gearSwtich;
+	DigitalOutput * climbingSwitch;
 
 	SendableChooser<AutoMode*> *chooser;
 	static const int TICKS_TO_ACCEL = 10;
 
 
-	void arcadeDrive(double speed, double turn, bool squaredinputs = false) {
+	void arcadeDrive(double speed, double turn, bool squaredinputs = false, bool inverted_control = false) {
+		if (inverted_control == true) {
+			speed = -speed;
+			turn = -turn;
+		}
 		SmartDashboard::PutNumber("speed", speed);
 		SmartDashboard::PutNumber("turn", turn);
 		drive->ArcadeDrive(speed, -turn, squaredinputs);
@@ -141,7 +151,7 @@ private:
 
 		gyro = new frc::AnalogGyro(ANALOG_GYRO);
 
-		gearSwtich = new DigitalOutput(GEAR_SWITCH_DIO);
+		climbingSwitch = new DigitalOutput(CLIMBING_SWITCH_DIO);
 
 		//autonChooser
 		chooser = new SendableChooser<AutoMode*>();
@@ -210,21 +220,27 @@ private:
 
 	}
 
-	const float WEIGHT_AFTER_ONE_SECOND = .001;
+	const float WEIGHT_AFTER_ONE_SECOND = .1;
 
 	float prev_time = 0;
 	float prev_speed = 0;
 	float prev_turn = 0;
 
+	float prev_process_success_time = 0;
+	float prev_process_success_turn = 0;
+	float process_success = 0;
+
 	void AutonomousPeriodic()
+
 	{
 		float time = timer.Get();
-		//float prev_weight = pow(WEIGHT_AFTER_ONE_SECOND, time - prev_time);
-		prev_time = time;
+		float prev_weight = pow(WEIGHT_AFTER_ONE_SECOND, time - prev_time);
+		float cur_weight = 1 - prev_weight;
 
 		float speed = 0;
 
 		double angle = gyro->GetAngle();
+
 		float turn = angle /-17.0;
 
 		float processed_turn = ProcessTargetTurn(0.1);
@@ -242,12 +258,20 @@ private:
 				if (mode != CENTER) {
 					speed = 0.6;
 				}
-				arcadeDrive(speed, turn);
+				//arcadeDrive(speed, turn);
 			}
 			else if (time >= 1 && time < 7) {
 				if (processed_turn !=0) {
-					turn = processed_turn;
+					process_success += 1;
+					if (process_success > 1) {
+						process_success = 1;
+					}
+					prev_process_success_turn = processed_turn;
+					prev_process_success_time = time;
 					//speed = 0.3;
+				}
+				else if (process_success > 0 && ((time - prev_process_success_time) < 0.25)) {
+					turn = prev_process_success_turn;
 				}
 				else if (mode == LEFT_SIDE) {
 					turn = (angle - 60) / -60.0; //opposite turn angle
@@ -255,23 +279,34 @@ private:
 				else if (mode == RIGHT_SIDE) {
 					turn = (angle + 30) / -60.0;
 				}
-				arcadeDrive(speed, turn, false);
+				//arcadeDrive(speed, turn, false);
 			}
 			else if(time < 5) {
 				if (mode == LEFT_SIDE || mode == RIGHT_SIDE) {
-					arcadeDrive(0.5, processed_turn);
+					speed = 0.5;
+					turn = processed_turn;
+					//arcadeDrive(0.5, processed_turn);
 				}
+			}
+			else if (time > 7) {
+				turn = 0;
+				speed = 0;
 			}
 		}
 		else if (mode == BASELINE) {
 			if (time < 3)
-				arcadeDrive(0.2, turn, false);
+				//arcadeDrive(0.2, turn, false);
+				speed = 0.6;
+			else {
+				speed = 0;
+				turn = 0;
+			}
 		}
 		else if (mode == BAD_GYRO) {
 			speed = 0.3;
 			if (time < 2) {
 				turn = 0.2;
-				arcadeDrive(speed, turn, false);
+				//arcadeDrive(speed, turn, false);
 			}
 			else if (time > 2 && time <= 6) {
 				if (processed_turn != 0) {
@@ -280,10 +315,28 @@ private:
 				else {
 					turn = 0;
 				}
-				arcadeDrive(speed, turn, false);
+				//arcadeDrive(speed, turn, false);
+			}
+			else {
+				turn = 0;
+				speed = 0;
 			}
 		}
+
+
+		float accel_turn = (prev_weight * prev_turn) + (cur_weight * turn);
+		//float accel_turn = turn;
+		arcadeDrive(speed, accel_turn, false);
+		prev_turn = turn;
+		prev_time = time;
+
+
+
 		SmartDashboard::PutNumber("processed turn", processed_turn);
+		SmartDashboard::PutNumber("turn", turn);
+		SmartDashboard::PutNumber("previous weight", prev_weight);
+
+		SmartDashboard::PutNumber("accel_turn", accel_turn);
 		SmartDashboard::PutNumber("time", time);
 		SmartDashboard::PutNumber("gyro angle", angle);
 
@@ -296,7 +349,7 @@ private:
 
 
 	}
-
+	bool invert = false;
 	void TeleopPeriodic()
 	{
 
@@ -332,18 +385,32 @@ private:
 		previousTurn = targetTurn;
 		SmartDashboard::PutNumber("real turn", turn);
 
-		arcadeDrive(speed, turn, false);
+		if (pilot->ButtonState(GamepadF310::BUTTON_X)) {
+			//arcadeDrive(speed, turn, false, true);
+			invert = !invert;
+		}
 
-		climber->Set(copilot->LeftTrigger()-copilot->RightTrigger());
+		if (invert == true) {
+			LED->Set(0.5,0.0,0.5);
+		}
+		else {
+			LED->SetAllianceColor();
+		}
+
+		arcadeDrive(speed, turn, false, invert);
+
+		SmartDashboard::PutBoolean("Climber Switch", climbingSwitch->Get());
+		if (climbingSwitch->Get() == false) {
+			climber->Set(copilot->LeftTrigger()-copilot->RightTrigger());
+		}
 
 		//LED->SetAllianceColor();
-		LED->Set(0,1,0);
+		//LED->Set(0,1,0);
 		if (copilot->ButtonState(GamepadF310::BUTTON_B)) {
 			LED->Set(0,1,0);
 
 		}
 
-		SmartDashboard::PutBoolean("Gear in holder", gearSwtich->Get());
 //		LED->Set(copilot->LeftTrigger(), copilot->RightTrigger(), fabs(copilot->LeftY()));
 	}
 	void TestPeriodic()

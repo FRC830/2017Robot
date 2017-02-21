@@ -11,9 +11,10 @@
 
 class Shooter {
 public:
-	Shooter(VictorSP * intakeMotor, VictorSP* shooterMotor, DigitalOutput* ballCounter /*probably some sort of swtich*/);
+	Shooter(VictorSP * intakeMotor, VictorSP* shooterMotor, Spark *ball_output, DigitalOutput* ballCounter /*probably some sort of swtich*/);
 	VictorSP * intake;
 	VictorSP * shooter;
+	Spark *ballOutput;
 	DigitalOutput * ballCount;
 
 	enum State {NOTHING, INTAKE, TOINTAKE, SHOOTING};

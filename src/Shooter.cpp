@@ -8,11 +8,12 @@
 #include "Shooter.h"
 #include "Timer.h"
 
-Shooter::Shooter(VictorSP * intakeMotor, VictorSP* shooterMotor, DigitalOutput* ballCounter /*probably some sort of switch*/) {
+Shooter::Shooter(VictorSP * intakeMotor, VictorSP* shooterMotor, Spark *ball_output, DigitalOutput* ballCounter /*probably some sort of switch*/) {
 	// TODO Auto-generated constructor stub
 	intake = intakeMotor;
 	shooter = shooterMotor;
 	ballCount = ballCounter;
+	ballOutput = ball_output;
 	state = NOTHING;
 
 }
@@ -38,6 +39,7 @@ void Shooter::stopIntake() {
 
 void Shooter::update() {
 	if (state == SHOOTING) {
+		ballOutput->Set(1.0);
 		shooter->Set(1.0);
 	}
 	else if (state == TOINTAKE) {
@@ -55,6 +57,7 @@ void Shooter::update() {
 	else {
 		intake->Set(0.0);
 		shooter->Set(0.0);
+		ballOutput->Set(0.0);
 	}
 
 }

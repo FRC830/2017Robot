@@ -169,6 +169,17 @@ void GripPipeline::Process(cv::Mat &source0){
 		return;
 	}
 
+	cv::Point top_right (boundRect[1].br().x, boundRect[1].tl().y);
+	double width = top_right.x - top_left.x;
+	double big_ratio = height/width;
+
+	SmartDashboard::PutNumber("big rectangle ratio", big_ratio);
+
+	if (big_ratio > 0.6 || big_ratio < 0.4) {
+		SmartDashboard::PutString("vision error", "ratio of containing rect not correct");
+		return;
+	}
+
 	for (int i = 0; i < (int)(boundRect.size()); i++) {
 		cv::rectangle(source0, boundRect[i].tl(), boundRect[i].br(), color_2, 2);
 	}
