@@ -46,7 +46,6 @@ void Shooter::shoot() {
 
 void Shooter::intakeBall() {
 	state = TOINTAKE;
-	numberOfBalls = 0;
 	startTimer();
 }
 
@@ -57,18 +56,19 @@ void Shooter::stopIntake() {
 void Shooter::update() {
 	if (state == SHOOTING) {
 		ballOutput->Set(1.0);
-		speedPID->SetSetpoint(20);
+		speedPID->SetSetpoint(SmartDashboard::GetNumber("revolutions",20));//20
+		SmartDashboard::PutNumber("PID error",speedPID->GetError());
 
 	}
 	else if (state == TOINTAKE) {
-		intake->Set(-1.0);
-		state = INTAKE;
+		intake->Set(1.0);
+		//state = INTAKE;
 	}
-	else if (state == INTAKE) {
+	/*else if (state == INTAKE) {
 		if (timer.Get() > 5.0) {
 			intake->Set(0.0);
 		}
-	}
+	}*/
 	else {
 		intake->Set(0.0);
 		speedPID->SetSetpoint(0.0);

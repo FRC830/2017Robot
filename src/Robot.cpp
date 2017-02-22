@@ -42,6 +42,8 @@ private:
 
 	static const int CLIMBING_SWITCH_DIO = 0;
 
+	bool highGoalCorrect = false;
+
 
 	//drivetrain
 	RobotDrive * drive;
@@ -107,13 +109,7 @@ private:
 		while(1) {
 			bool working = sink.GrabFrame(image_temp);
 			SmartDashboard::PutBoolean("working", working);
-			/*if (set_exposure && !previous_exposure) {
-				camera.SetExposureManual(10);
-			}
-			else if(!set_exposure && previous_exposure) {
-				camera.SetExposureManual(80);
-			}
-			previous_exposure = set_exposure; */
+
 			if (working) {
 				g_frame ++;
 				image = image_temp;
@@ -123,7 +119,13 @@ private:
 			}
 
 			//pipeline->hslThreshold(image, hue, sat, lum, hsl_output);
-			pipeline->Process(image);
+			bool target = SmartDashboard::GetBoolean("target bool", false);
+			if (target == true) {
+				pipeline->GuideLines(image);
+			}
+			else {
+				pipeline->Process(image);
+			}
 			//outputStream.PutFrame(*pipeline->gethslThresholdOutput());
 			outputStream.PutFrame(image);
 		}
@@ -167,6 +169,12 @@ private:
 		chooser->AddObject("bad gyro", new AutoMode(BAD_GYRO));
 		SmartDashboard::PutData("Auto Modes", chooser);
 		
+		SmartDashboard::PutNumber("P",0);
+		SmartDashboard::PutNumber("I",0);
+		SmartDashboard::PutNumber("D",0);
+
+		SmartDashboard::PutNumber("revolutions",20);
+
 		shooter = new Shooter(
 				new VictorSP(INTAKE_PWM),
 				new VictorSP(SHOOTER_PWM),
@@ -398,6 +406,13 @@ private:
 			targetTurn = pilot->RightX()/1.5;
 			gyro->Reset();
 		}
+		if (pilot->ButtonState(GamepadF310::BUTTON_LEFT_BUMPER)) {
+			highGoalCorrect = true;
+			SmartDashboard::PutBoolean("target bool", highGoalCorrect);
+		}
+		else {
+			highGoalCorrect = false;
+		}
 
 		float turn = accel(previousTurn, targetTurn, 10);
 		previousTurn = targetTurn;
@@ -418,7 +433,7 @@ private:
 		arcadeDrive(speed, turn, false, invert);
 
 		SmartDashboard::PutBoolean("Climber Switch", climbingSwitch->Get());
-		if (climbingSwitch->Get() == false) {
+		if (climbingSwitch->Get() == false || copilot->DPadUp()) {
 			climber->Set(copilot->LeftTrigger()-copilot->RightTrigger());
 		}
 

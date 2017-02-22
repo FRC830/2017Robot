@@ -36,6 +36,8 @@ class GripPipeline {
 		GripPipeline();
 		void Process(cv::Mat &source0);
 		void setsource0(cv::Mat &source0);
+		void GuideLines(cv::Mat &source);
+
 		cv::Mat* gethslThresholdOutput();
 		std::vector<std::vector<cv::Point> >* getfindContoursOutput();
 		std::vector<std::vector<cv::Point> >* getfilterContoursOutput();

@@ -28,9 +28,9 @@ void GripPipeline::Process(cv::Mat &source0){
 	/*double hslThresholdHue[] = {40, 80};
 	double hslThresholdSaturation[] = {57, 127};
 	double hslThresholdLuminance[] = {225, 255}; */
-	 double hslThresholdHue[] = {0,180};
-     double hslThresholdSaturation[] = {28, 255.0};
-     double hslThresholdLuminance[] = {240, 255.0};
+	double hslThresholdHue[] = {0,180};
+    double hslThresholdSaturation[] = {28, 255.0};
+    double hslThresholdLuminance[] = {240, 255.0};
 
 
 	double filterContoursMaxVertecies = 55;
@@ -55,6 +55,7 @@ void GripPipeline::Process(cv::Mat &source0){
 
 	//DrawContours(source0,findContoursOutput,-1, color);
 
+	//branch start
 
 	cv::Scalar color_2(255,255,0);
 	cv::Scalar test_color(100,30,223);
@@ -100,20 +101,6 @@ void GripPipeline::Process(cv::Mat &source0){
 		if (ratio < 1) {
 			ratio = 1 / ratio;
 		}
-//		boundRect[0] = cv::boundingRect(cv::Mat(smoothContours[i]));
-//		boundRect[1] = cv::boundingRect(cv::Mat(smoothContours[i + 1]));
-//
-//		if (boundRect.size() != 2) {
-//			return;
-//		}
-//		double left_1 = boundRect[0].tl().x;
-//		double left_2 = boundRect[1].tl().x;
-//
-//		if (left_2 < left_1) {
-//			std::swap(boundRect[0], boundRect[1]);
-//		}
-//		double height = boundRect[0].tl().y - boundRect[1].br().y;
-//
 
 		areaCompare.push_back(ratio);
 	}
@@ -190,18 +177,6 @@ void GripPipeline::Process(cv::Mat &source0){
 	cv::line(source0, top_left, bottom_right, color_2, 3);
 	cv::line(source0, center, center, color, 5);
 
-	/*std::vector<cv::Moments> mu( smoothContours.size());
-	for (int i = 0; i < (int)(smoothContours.size()); i++) {
-		mu[i] = moments(smoothContours[i],false);
-	}
-	std::vector<cv::Point2f> mc(smoothContours.size());
-	for (int i =  0; i < (int)(smoothContours.size()); i++) {
-		mc[i] = cv::Point2f(mu[i].m10/mu[i].m00, mu[i].m01/mu[i].m00);
-	}
-	cv::line(source0, mc[0], mc[1], color, 5);
-	cv::Point mid_point = (mc[0] + mc[1])/2;
-	cv::line(source0, mid_point, mid_point,color_2,5 ); */
-
 	cv::Scalar color_3 (0,255,255);
 	cv::line(source0, cv::Point2f(160,0), cv::Point2f(160,240),color_3,2 );
 	cv::line(source0, cv::Point2f(0,120), cv::Point2f(320,120), color_3,2);
@@ -210,12 +185,14 @@ void GripPipeline::Process(cv::Mat &source0){
 	SmartDashboard::PutNumber("x value between bars", center.x);
 	SmartDashboard::PutBoolean("target acquired", true);
 	SmartDashboard::PutNumber("middle x value", 160);
-	//SmartDashboard::PutNumber("height", height); //240
-	//SmartDashboard::PutNumber("width", width); //320
-	//return mid_point.x;
 
 }
 
+void GripPipeline::GuideLines(cv::Mat &source) {
+	cv::Scalar color (0,255,0);
+	cv:line(source, cv::Point(0,120), cv::Point(320,120),color);
+	cv::line(source, cv::Point(160,0), cv::Point(160,240), color);
+}
 /**
  * This method is a generated setter for source0.
  * @param source the Mat to set
