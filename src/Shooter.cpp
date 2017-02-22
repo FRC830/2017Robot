@@ -8,15 +8,32 @@
 #include "Shooter.h"
 #include "Timer.h"
 
-Shooter::Shooter(VictorSP * intakeMotor, VictorSP* shooterMotor, Spark *ball_output, DigitalOutput* ballCounter /*probably some sort of switch*/) {
+Shooter::Shooter(VictorSP * intakeMotor, VictorSP* shooterMotor, Spark *ball_output, LineBreakCounter * shoot_speed /*probably some sort of switch*/) {
 	// TODO Auto-generated constructor stub
+	p = 0.1;
+	i = 0.0;
+	d = 0.0;
 	intake = intakeMotor;
 	shooter = shooterMotor;
-	ballCount = ballCounter;
+	shootSpeed = shoot_speed;
 	ballOutput = ball_output;
+	speedPID = new PIDController(p,i,d, shootSpeed, shooter);
+	speedPID->SetInputRange(0,1000);
+	speedPID->SetOutputRange(0,1);
+	speedPID->SetAbsoluteTolerance(5); //subject to change
+	speedPID->Enable();
+
 	state = NOTHING;
 
 }
+void Shooter::disablePID() {
+	speedPID->Disable();
+}
+
+void Shooter::setPIDValues(float p, float i, float d) {
+	speedPID->SetPID(p,i,d);
+}
+
 void Shooter::startTimer() {
 	timer.Stop();
 	timer.Reset();
@@ -40,7 +57,8 @@ void Shooter::stopIntake() {
 void Shooter::update() {
 	if (state == SHOOTING) {
 		ballOutput->Set(1.0);
-		shooter->Set(1.0);
+		speedPID->SetSetpoint(20);
+
 	}
 	else if (state == TOINTAKE) {
 		intake->Set(-1.0);
@@ -50,13 +68,10 @@ void Shooter::update() {
 		if (timer.Get() > 5.0) {
 			intake->Set(0.0);
 		}
-		if (ballCount->Get()) {
-			numberOfBalls += 1;
-		}
 	}
 	else {
 		intake->Set(0.0);
-		shooter->Set(0.0);
+		speedPID->SetSetpoint(0.0);
 		ballOutput->Set(0.0);
 	}
 

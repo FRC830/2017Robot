@@ -10,6 +10,7 @@
 #include "input/GamepadF310.h"
 #include "util/Algorithms.h"
 #include "math.h"
+#include "Shooter.h"
 
 using namespace Lib830;
 
@@ -27,10 +28,11 @@ private:
 	static const int RIGHT_PWM_TWO = 8;
 
 	static const int CLIMBER_PWM = 3; //CB
-	static const int BALL_OUTPUTPWM = 2;
 
+	static const int BALL_OUTPUTPWM = 2;
 	static const int SHOOTER_PWM =  5;//SH
 	static const int INTAKE_PWM = 7;//IT
+	static const int COUNTER_DIO = 1;
 
 	static const int ANALOG_GYRO = 0;
 
@@ -61,6 +63,8 @@ private:
 
 	SendableChooser<AutoMode*> *chooser;
 	static const int TICKS_TO_ACCEL = 10;
+
+	Shooter * shooter;
 
 
 	void arcadeDrive(double speed, double turn, bool squaredinputs = false, bool inverted_control = false) {
@@ -163,6 +167,13 @@ private:
 		chooser->AddObject("bad gyro", new AutoMode(BAD_GYRO));
 		SmartDashboard::PutData("Auto Modes", chooser);
 		
+		shooter = new Shooter(
+				new VictorSP(INTAKE_PWM),
+				new VictorSP(SHOOTER_PWM),
+				new Spark(BALL_OUTPUTPWM),
+				new LineBreakCounter(COUNTER_DIO)
+		);
+
 		std::thread visionThread(CameraPeriodic);
 		visionThread.detach();
 
@@ -209,6 +220,7 @@ private:
 		SmartDashboard::PutNumber("process turn speed", turn);
 		return turn;
 	}
+
 	void AutonomousInit()
 	{
 		timer.Reset();
@@ -228,7 +240,7 @@ private:
 
 	float prev_process_success_time = 0;
 	float prev_process_success_turn = 0;
-	float process_success = 0;
+	bool process_success = false;
 
 	void AutonomousPeriodic()
 
@@ -262,22 +274,19 @@ private:
 			}
 			else if (time >= 1 && time < 7) {
 				if (processed_turn !=0) {
-					process_success += 1;
-					if (process_success > 1) {
-						process_success = 1;
-					}
+					process_success = true;
 					prev_process_success_turn = processed_turn;
 					prev_process_success_time = time;
 					//speed = 0.3;
 				}
-				else if (process_success > 0 && ((time - prev_process_success_time) < 0.25)) {
+				else if (process_success && ((time - prev_process_success_time) < 0.25)) {
 					turn = prev_process_success_turn;
 				}
 				else if (mode == LEFT_SIDE) {
 					turn = (angle - 60) / -60.0; //opposite turn angle
 				}
 				else if (mode == RIGHT_SIDE) {
-					turn = (angle + 30) / -60.0;
+					turn = (angle + 60) / -60.0;
 				}
 				//arcadeDrive(speed, turn, false);
 			}
@@ -309,8 +318,14 @@ private:
 				//arcadeDrive(speed, turn, false);
 			}
 			else if (time > 2 && time <= 6) {
-				if (processed_turn != 0) {
-					turn = processed_turn;
+				if (processed_turn !=0) {
+					process_success = true;
+					prev_process_success_turn = processed_turn;
+					prev_process_success_time = time;
+					//speed = 0.3;
+				}
+				else if (process_success && ((time - prev_process_success_time) < 0.25)) {
+					turn = prev_process_success_turn;
 				}
 				else {
 					turn = 0;
@@ -346,8 +361,11 @@ private:
 	{
 		gyro->Reset();
 		LED->Disable();
+		float p = SmartDashboard::GetNumber("P",0);
+		float i = SmartDashboard::GetNumber("I",0);
+		float d = SmartDashboard::GetNumber("D",0);
 
-
+		shooter->setPIDValues(p,i,d);
 	}
 	bool invert = false;
 	void TeleopPeriodic()
@@ -410,6 +428,16 @@ private:
 			LED->Set(0,1,0);
 
 		}
+		if (copilot->ButtonState(GamepadF310::BUTTON_A)) {
+			shooter->intakeBall();
+		}
+		else {
+			shooter->stopIntake();
+		}
+		if (copilot->ButtonState(GamepadF310::BUTTON_X)) {
+			shooter->shoot();
+		}
+		shooter->update();
 
 //		LED->Set(copilot->LeftTrigger(), copilot->RightTrigger(), fabs(copilot->LeftY()));
 	}

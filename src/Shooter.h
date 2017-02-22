@@ -5,17 +5,21 @@
  *      Author: RatPack
  */
 #include "WPIlib.h"
+#include "LineBreakCounter.h"
 
 #ifndef SHOOTER_H_
 #define SHOOTER_H_
 
 class Shooter {
 public:
-	Shooter(VictorSP * intakeMotor, VictorSP* shooterMotor, Spark *ball_output, DigitalOutput* ballCounter /*probably some sort of swtich*/);
+	Shooter(VictorSP * intakeMotor, VictorSP* shooterMotor, Spark *ball_output, LineBreakCounter* shoot_speed /*probably some sort of swtich*/);
 	VictorSP * intake;
 	VictorSP * shooter;
 	Spark *ballOutput;
-	DigitalOutput * ballCount;
+	LineBreakCounter * shootSpeed;
+	PIDController * speedPID;
+	float p,i,d;
+	//float speed;
 
 	enum State {NOTHING, INTAKE, TOINTAKE, SHOOTING};
 
@@ -25,6 +29,9 @@ public:
 	void intakeBall();
 	void stopIntake();
 	void update();
+
+	void disablePID();
+	void setPIDValues(float p, float i, float d);
 
 	Timer timer;
 	State state;
