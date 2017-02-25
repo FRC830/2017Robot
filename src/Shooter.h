@@ -40,6 +40,7 @@ public:
 private:
 	void startTimer();
 	int numberOfBalls = 0;
+	bool has_intaken = false;
 };
 
 #endif /* SHOOTER_H_ */

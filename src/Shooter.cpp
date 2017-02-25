@@ -61,7 +61,17 @@ void Shooter::update() {
 
 	}
 	else if (state == TOINTAKE) {
-		intake->Set(1.0);
+		if (!has_intaken) {
+			intake->Set(1.0);
+			startTimer();
+			has_intaken = true;
+		}
+		else {
+			if (timer.Get() > 5) {
+				intake->Set(0);
+				timer.Stop();
+			}
+		}
 		//state = INTAKE;
 	}
 	/*else if (state == INTAKE) {

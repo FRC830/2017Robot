@@ -276,11 +276,12 @@ private:
 			speed = 0.3;
 			if (time < 1) {
 				if (mode != CENTER) {
-					speed = 0.6;
+					speed = 0.65;
 				}
 				//arcadeDrive(speed, turn);
 			}
 			else if (time >= 1 && time < 7) {
+				speed = 0.3;
 				if (processed_turn !=0) {
 					process_success = true;
 					prev_process_success_turn = processed_turn;
@@ -298,7 +299,7 @@ private:
 				}
 				//arcadeDrive(speed, turn, false);
 			}
-			else if(time < 5) {
+			else if(time > 5) { //dont need
 				if (mode == LEFT_SIDE || mode == RIGHT_SIDE) {
 					speed = 0.5;
 					turn = processed_turn;
