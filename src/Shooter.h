@@ -21,24 +21,24 @@ public:
 	float p,i,d;
 	//float speed;
 
-	enum State {NOTHING, INTAKE, TOINTAKE, SHOOTING};
+	enum State {NOTHING, TOINTAKE, SHOOTING};
 
 	bool hasBall();
 
 	void shoot();
 	void intakeBall();
 	void stopIntake();
+	void stopShoot();
 	void update();
 
 	void disablePID();
 	void setPIDValues(float p, float i, float d);
 
-	Timer timer;
+	Timer *shooterTimer;
 	State state;
 
 	virtual ~Shooter();
 private:
-	void startTimer();
 	int numberOfBalls = 0;
 	bool has_intaken = false;
 };

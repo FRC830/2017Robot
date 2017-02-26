@@ -162,10 +162,10 @@ void GripPipeline::Process(cv::Mat &source0){
 
 	SmartDashboard::PutNumber("big rectangle ratio", big_ratio);
 
-	if (big_ratio > 0.6 || big_ratio < 0.4) {
+	/*if (big_ratio > 0.6 || big_ratio < 0.4) {
 		SmartDashboard::PutString("vision error", "ratio of containing rect not correct");
 		return;
-	}
+	}*/
 
 	for (int i = 0; i < (int)(boundRect.size()); i++) {
 		cv::rectangle(source0, boundRect[i].tl(), boundRect[i].br(), color_2, 2);
@@ -190,7 +190,7 @@ void GripPipeline::Process(cv::Mat &source0){
 
 void GripPipeline::GuideLines(cv::Mat &source) {
 	cv::Scalar color (0,255,0);
-	cv:line(source, cv::Point(0,120), cv::Point(320,120),color);
+	cv::line(source, cv::Point(0,120), cv::Point(320,120),color);
 	cv::line(source, cv::Point(160,0), cv::Point(160,240), color);
 }
 /**

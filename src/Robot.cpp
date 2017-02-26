@@ -101,7 +101,7 @@ private:
 		camera.SetResolution(320,240);
 
 		sink = server->GetVideo();
-		outputStream = server->PutVideo("Processed", 400, 400);
+		outputStream = server->PutVideo("Processed", 320, 240);
 		//outputStream.
 		//camera.SetExposureManual(80);
 
@@ -131,7 +131,6 @@ private:
 		}
 
 
-		//hue = SmartDashboard::GetNumber("P:", 0.075);
 	}
 
 	void RobotInit()
@@ -169,7 +168,7 @@ private:
 		chooser->AddObject("bad gyro", new AutoMode(BAD_GYRO));
 		SmartDashboard::PutData("Auto Modes", chooser);
 		
-		SmartDashboard::PutNumber("P",0);
+		SmartDashboard::PutNumber("P",3);
 		SmartDashboard::PutNumber("I",0);
 		SmartDashboard::PutNumber("D",0);
 
@@ -205,7 +204,8 @@ private:
 			float mid_point = SmartDashboard::GetNumber("x value between bars",center);
 			turn = (center - mid_point) / -140;
 
-			float max_turn_speed = 0.3;
+			float max_turn_speed = 0.5;
+			SmartDashboard::PutNumber("max_turn_speed", max_turn_speed);
 			float min_turn_speed = min_turn;
 
 			if (fabs(turn) < min_turn_speed) {
@@ -234,34 +234,48 @@ private:
 		timer.Reset();
 		timer.Start();
 		gyro->Reset();
+		//shooter->
 
 		//autonChooser
 		//std::string autoSelected = SmartDashboard::GetString("Auto Selector", autoNameDefault);
 
 	}
 
-	const float WEIGHT_AFTER_ONE_SECOND = .1;
+	const float WEIGHT_AFTER_ONE_SECOND = .0001;
 
 	float prev_time = 0;
 	float prev_speed = 0;
+
 	float prev_turn = 0;
 
 	float prev_process_success_time = 0;
 	float prev_process_success_turn = 0;
 	bool process_success = false;
+	double gyro_offset = 0;
+
+	void GyroReset() {
+		gyro_offset = gyro->GetAngle();
+	}
+
+	double GyroGetAngle() {
+		return gyro->GetAngle()-gyro_offset;
+	}
 
 	void AutonomousPeriodic()
 
 	{
 		float time = timer.Get();
-		float prev_weight = pow(WEIGHT_AFTER_ONE_SECOND, time - prev_time);
-		float cur_weight = 1 - prev_weight;
+		//float cur_weight = pow(WEIGHT_AFTER_ONE_SECOND, time - prev_time);
+		//float prev_weight = 1 - cur_weight;
+
+		float prev_weight = 0.4;
 
 		float speed = 0;
 
 		double angle = gyro->GetAngle();
 
 		float turn = angle /-17.0;
+		float straight_time = 1;
 
 		float processed_turn = ProcessTargetTurn(0.1);
 		//arcadeDrive(0.0, 0.0);
@@ -273,17 +287,19 @@ private:
 		}
 
 		if (mode == LEFT_SIDE || mode == RIGHT_SIDE || mode == CENTER) {
-			speed = 0.3;
-			if (time < 1) {
-				if (mode != CENTER) {
-					speed = 0.65;
-				}
+			if (mode != CENTER) {
+				straight_time = 3.8;
+			}
+			if (time < straight_time) {
+				speed = 0.3;
 				//arcadeDrive(speed, turn);
 			}
-			else if (time >= 1 && time < 7) {
+			else if (time >= straight_time && time < straight_time + 5) {
 				speed = 0.3;
 				if (processed_turn !=0) {
 					process_success = true;
+					gyro->Reset();
+					turn = processed_turn;
 					prev_process_success_turn = processed_turn;
 					prev_process_success_time = time;
 					//speed = 0.3;
@@ -291,22 +307,30 @@ private:
 				else if (process_success && ((time - prev_process_success_time) < 0.25)) {
 					turn = prev_process_success_turn;
 				}
-				else if (mode == LEFT_SIDE) {
+				else if (mode == LEFT_SIDE && (time - straight_time < 2)) {
 					turn = (angle - 60) / -60.0; //opposite turn angle
+					if (turn > 0.4) {
+						turn = 0.4;
+					}
+					speed = 0;
 				}
-				else if (mode == RIGHT_SIDE) {
+				else if (mode == RIGHT_SIDE && (time - straight_time < 2)) {
 					turn = (angle + 60) / -60.0;
+					if (turn < -0.4) {
+						turn = -0.4;
+					}
+					speed = 0;
 				}
 				//arcadeDrive(speed, turn, false);
 			}
-			else if(time > 5) { //dont need
-				if (mode == LEFT_SIDE || mode == RIGHT_SIDE) {
-					speed = 0.5;
-					turn = processed_turn;
-					//arcadeDrive(0.5, processed_turn);
-				}
-			}
-			else if (time > 7) {
+//			else if(time > 5) { //dont need
+//				if (mode == LEFT_SIDE || mode == RIGHT_SIDE) {
+//					speed = 0.5;
+//					turn = processed_turn;
+//					//arcadeDrive(0.5, processed_turn);
+//				}
+//			}
+			else {
 				turn = 0;
 				speed = 0;
 			}
@@ -348,11 +372,11 @@ private:
 		}
 
 
-		float accel_turn = (prev_weight * prev_turn) + (cur_weight * turn);
-		//float accel_turn = turn;
+		//float accel_turn = (prev_weight * prev_turn) + (cur_weight * turn);
+		float accel_turn = accel(prev_turn, turn, 10);
 		arcadeDrive(speed, accel_turn, false);
 		prev_turn = turn;
-		prev_time = time;
+		//prev_time = time;
 
 
 
@@ -370,13 +394,14 @@ private:
 	{
 		gyro->Reset();
 		LED->Disable();
-		float p = SmartDashboard::GetNumber("P",0);
+		float p = SmartDashboard::GetNumber("P",3);
 		float i = SmartDashboard::GetNumber("I",0);
 		float d = SmartDashboard::GetNumber("D",0);
 
 		shooter->setPIDValues(p,i,d);
 	}
 	bool invert = false;
+	bool x_was_pressed = false;
 	void TeleopPeriodic()
 	{
 
@@ -413,16 +438,20 @@ private:
 		}
 		else {
 			highGoalCorrect = false;
+			SmartDashboard::PutBoolean("target bool", highGoalCorrect);
 		}
 
 		float turn = accel(previousTurn, targetTurn, 10);
 		previousTurn = targetTurn;
 		SmartDashboard::PutNumber("real turn", turn);
 
-		if (pilot->ButtonState(GamepadF310::BUTTON_X)) {
+		bool x_pressed = pilot->ButtonState(GamepadF310::BUTTON_X);
+
+		if (x_pressed != x_was_pressed && x_pressed) {
 			//arcadeDrive(speed, turn, false, true);
 			invert = !invert;
 		}
+		x_was_pressed = x_pressed;
 
 		if (invert == true) {
 			LED->Set(0.5,0.0,0.5);
@@ -430,7 +459,7 @@ private:
 		else {
 			LED->SetAllianceColor();
 		}
-
+		SmartDashboard::PutBoolean("invert", invert);
 		arcadeDrive(speed, turn, false, invert);
 
 		SmartDashboard::PutBoolean("Climber Switch", climbingSwitch->Get());
@@ -450,8 +479,12 @@ private:
 		else {
 			shooter->stopIntake();
 		}
+
 		if (copilot->ButtonState(GamepadF310::BUTTON_X)) {
 			shooter->shoot();
+		}
+		else {
+			//shooter->stopShoot();
 		}
 		shooter->update();
 
