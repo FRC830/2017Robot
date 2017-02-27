@@ -169,7 +169,7 @@ private:
 		SmartDashboard::PutData("Auto Modes", chooser);
 		
 		SmartDashboard::PutNumber("P",3);
-		SmartDashboard::PutNumber("I",0);
+		SmartDashboard::PutNumber("I",1);
 		SmartDashboard::PutNumber("D",0);
 
 		SmartDashboard::PutNumber("revolutions",20);
@@ -346,13 +346,10 @@ private:
 		}
 		else if (mode == BAD_GYRO) {
 			speed = 0.3;
-			if (time < 2) {
-				turn = 0.2;
-				//arcadeDrive(speed, turn, false);
-			}
-			else if (time > 2 && time <= 6) {
+			if (time > 0 && time <= 6) {
 				if (processed_turn !=0) {
 					process_success = true;
+					turn = processed_turn;
 					prev_process_success_turn = processed_turn;
 					prev_process_success_time = time;
 					//speed = 0.3;
@@ -395,7 +392,7 @@ private:
 		gyro->Reset();
 		LED->Disable();
 		float p = SmartDashboard::GetNumber("P",3);
-		float i = SmartDashboard::GetNumber("I",0);
+		float i = SmartDashboard::GetNumber("I",1);
 		float d = SmartDashboard::GetNumber("D",0);
 
 		shooter->setPIDValues(p,i,d);
