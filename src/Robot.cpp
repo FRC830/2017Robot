@@ -204,7 +204,7 @@ private:
 			float mid_point = SmartDashboard::GetNumber("x value between bars",center);
 			turn = (center - mid_point) / -140;
 
-			float max_turn_speed = 0.5;
+			float max_turn_speed = 0.3;
 			SmartDashboard::PutNumber("max_turn_speed", max_turn_speed);
 			float min_turn_speed = min_turn;
 
