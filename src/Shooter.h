@@ -21,15 +21,20 @@ public:
 	float p,i,d;
 	//float speed;
 
-	enum State {NOTHING, TOINTAKE, SHOOTING};
+	enum State {NOTHING, TOINTAKE, SHOOTING, MANUAL_SHOOT, OUTPUT, INTAKE_OUTPUT};
 
-	bool hasBall();
+	//bool hasBall();
 
 	void shoot();
 	void intakeBall();
 	void stopIntake();
 	void stopShoot();
 	void update();
+	void agitator();
+	void manualShoot();
+	void stopBallOutPut();
+	void intakeOverRide();
+	void agitatorIntake();
 
 	void disablePID();
 	void setPIDValues(float p, float i, float d);
