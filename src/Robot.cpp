@@ -68,6 +68,7 @@ private:
 
 	Shooter * shooter;
 
+	VictorSP *agitator;
 
 	void arcadeDrive(double speed, double turn, bool squaredinputs = false, bool inverted_control = false) {
 		if (inverted_control == true) {
@@ -172,7 +173,7 @@ private:
 		SmartDashboard::PutNumber("I",1);
 		SmartDashboard::PutNumber("D",0);
 
-		SmartDashboard::PutNumber("revolutions",20);
+		SmartDashboard::PutNumber("revolutions",60);
 
 		shooter = new Shooter(
 				new VictorSP(INTAKE_PWM),
@@ -180,6 +181,8 @@ private:
 				new Spark(BALL_OUTPUTPWM),
 				new LineBreakCounter(COUNTER_DIO)
 		);
+
+		agitator = new VictorSP(BALL_OUTPUTPWM);
 
 		std::thread visionThread(CameraPeriodic);
 		visionThread.detach();
@@ -204,7 +207,7 @@ private:
 			float mid_point = SmartDashboard::GetNumber("x value between bars",center);
 			turn = (center - mid_point) / -140;
 
-			float max_turn_speed = 0.5;
+			float max_turn_speed = 0.3;
 			SmartDashboard::PutNumber("max_turn_speed", max_turn_speed);
 			float min_turn_speed = min_turn;
 
@@ -300,12 +303,12 @@ private:
 					process_success = true;
 					gyro->Reset();
 					turn = processed_turn;
-					prev_process_success_turn = processed_turn;
-					prev_process_success_time = time;
-					//speed = 0.3;
-				}
-				else if (process_success && ((time - prev_process_success_time) < 0.25)) {
-					turn = prev_process_success_turn;
+//					prev_process_success_turn = processed_turn;
+//					prev_process_success_time = time;
+//					//speed = 0.3;
+//				}
+//				else if (process_success && ((time - prev_process_success_time) < 0.25)) {
+//					turn = prev_process_success_turn;
 				}
 				else if (mode == LEFT_SIDE && (time - straight_time < 2)) {
 					turn = (angle - 60) / -60.0; //opposite turn angle
@@ -461,7 +464,7 @@ private:
 
 		SmartDashboard::PutBoolean("Climber Switch", climbingSwitch->Get());
 		if (climbingSwitch->Get() == false || copilot->DPadUp()) {
-			climber->Set(copilot->LeftTrigger()-copilot->RightTrigger());
+			climber->Set(-(copilot->RightTrigger()));
 		}
 
 		//LED->SetAllianceColor();
@@ -473,17 +476,25 @@ private:
 		if (copilot->ButtonState(GamepadF310::BUTTON_A)) {
 			shooter->intakeBall();
 		}
-		else {
-			shooter->stopIntake();
-		}
 
 		if (copilot->ButtonState(GamepadF310::BUTTON_X)) {
+			shooter->agitator();
+			//agitator->Set(1.0);
+		}
+//		else {
+//			agitator->Set(0);
+//		}
+
+		if (copilot->LeftTrigger() > 0.5) {
+			//shooter->stopShoot();
+			//shooter->manualShoot();
 			shooter->shoot();
 		}
-		else {
-			//shooter->stopShoot();
+		if (copilot->DPadUp()) {
+			shooter->agitatorIntake();
 		}
 		shooter->update();
+		SmartDashboard::PutNumber("agitator", agitator->Get());
 
 //		LED->Set(copilot->LeftTrigger(), copilot->RightTrigger(), fabs(copilot->LeftY()));
 	}

@@ -40,6 +40,13 @@ void Shooter::shoot() {
 	state = SHOOTING;
 }
 
+void Shooter::agitator() {
+	state = OUTPUT;
+}
+
+void Shooter::manualShoot() {
+	state = MANUAL_SHOOT;
+}
 void Shooter::intakeBall() {
 	state = TOINTAKE;
 }
@@ -51,16 +58,35 @@ void Shooter::stopIntake() {
 void Shooter::stopShoot() {
 	state = NOTHING;
 }
+void Shooter::stopBallOutPut() {
+	state = NOTHING;
+}
+
+void Shooter::agitatorIntake() {
+	state = INTAKE_OUTPUT;
+}
 
 void Shooter::update() {
 	SmartDashboard::PutNumber("state", state);
-	if (state == SHOOTING) {
+	if (state == SHOOTING || state == MANUAL_SHOOT) {
+		//ballOutput->Set(1.0);
+		if (state == SHOOTING){
+			speedPID->SetSetpoint(SmartDashboard::GetNumber("revolutions",60));//20
+			SmartDashboard::PutNumber("PID error",speedPID->GetError());
+			SmartDashboard::PutString("state1", "shooting state");
+		}
+		else {
+			shooter->Set(1.0);
+		}
 		state = NOTHING;
+	}
+	else if (state == OUTPUT || state == INTAKE_OUTPUT) {
 		ballOutput->Set(1.0);
-		speedPID->SetSetpoint(SmartDashboard::GetNumber("revolutions",20));//20
-		SmartDashboard::PutNumber("PID error",speedPID->GetError());
-		SmartDashboard::PutString("state1", "shooting state");
-
+		SmartDashboard::PutNumber("agitator speeed", ballOutput->Get());
+		if (state == INTAKE_OUTPUT) {
+			intake->Set(1);
+		}
+		state = NOTHING;
 	}
 	else if (state == TOINTAKE) {
 		state = NOTHING;
@@ -88,7 +114,10 @@ void Shooter::update() {
 		shooter->Set(0.0);
 		speedPID->SetSetpoint(0.0);
 		ballOutput->Set(0.0);
+
 		has_intaken = false;
+		//shooterToSpeed = false;
+
 		shooterTimer->Stop();
 		shooterTimer->Reset();
 	}
