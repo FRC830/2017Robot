@@ -20,10 +20,7 @@ GripPipeline::GripPipeline() {
 * Sources need to be set before calling this method.
 *
 */
-void GripPipeline::Process(cv::Mat &source0){
-	//Step HSL_Threshold0:
-	//input
-	SmartDashboard::PutBoolean("target acquired", false);
+std::vector<std::vector<cv:: Point>> GripPipeline::ProcessImage(cv::Mat &source0) {
 	cv::Mat hslThresholdInput = source0;
 	/*double hslThresholdHue[] = {40, 80};
 	double hslThresholdSaturation[] = {57, 127};
@@ -41,7 +38,6 @@ void GripPipeline::Process(cv::Mat &source0){
 	bool findContoursExternalOnly = true;  // default Boolean
 
 	findContours(findContoursInput, findContoursExternalOnly, this->findContoursOutput);
-	cv::Scalar color(255,128,0);
 //	cv::Scalar color(255,128,0);
 
 	std::vector<std::vector<cv::Point>> smoothContours(findContoursOutput.size());
@@ -52,23 +48,20 @@ void GripPipeline::Process(cv::Mat &source0){
 	filterContourVertecies(smoothContours, filterContoursMaxVertecies, filterContoursMinVertecies, this->filterContourVerteciesOutput);
 
 	smoothContours = filterContourVerteciesOutput;
+	return smoothContours;
+}
+
+
+void GripPipeline::Process(cv::Mat &source0){
+	SmartDashboard::PutBoolean("target acquired", false);
+	std::vector<std::vector<cv:: Point>> smoothContours = ProcessImage(source0);
 
 	//DrawContours(source0,findContoursOutput,-1, color);
-
-	//branch start
-
+	cv::Scalar color(255,128,0);
 	cv::Scalar color_2(255,255,0);
 	cv::Scalar test_color(100,30,223);
-	std::vector<cv::Rect> boundRect(smoothContours.size());
 
-//	std::vector<cv::Rect> testRect(findContoursOutput.size());
-//
-//	DrawContours(source0, findContoursOutput, -1, test_color);
-//	for (int i = 0; i < (int)(findContoursOutput.size()); i++) {
-//		testRect[i] = cv::boundingRect(cv::Mat (findContoursOutput[i]));
-//		cv::rectangle(source0, testRect[i].tl(),testRect[i].br(), color_2,2);
-//
-//	}
+	std::vector<cv::Rect> boundRect(smoothContours.size());
 
 	for (int i = 0; i < (int)(smoothContours.size()); /*nothing*/) {
 		boundRect[i] = cv::boundingRect(cv::Mat(smoothContours[i]));
@@ -162,11 +155,6 @@ void GripPipeline::Process(cv::Mat &source0){
 
 	SmartDashboard::PutNumber("big rectangle ratio", big_ratio);
 
-	/*if (big_ratio > 0.6 || big_ratio < 0.4) {
-		SmartDashboard::PutString("vision error", "ratio of containing rect not correct");
-		return;
-	}*/
-
 	for (int i = 0; i < (int)(boundRect.size()); i++) {
 		cv::rectangle(source0, boundRect[i].tl(), boundRect[i].br(), color_2, 2);
 	}
@@ -185,6 +173,42 @@ void GripPipeline::Process(cv::Mat &source0){
 	SmartDashboard::PutNumber("x value between bars", center.x);
 	SmartDashboard::PutBoolean("target acquired", true);
 	SmartDashboard::PutNumber("middle x value", 160);
+
+}
+
+void GripPipeline::boilerProcess(cv::Mat &source0) {
+	std::vector<std::vector<cv:: Point>> smoothContours = ProcessImage(source0);
+
+	std::vector<cv::Rect> boundRect(smoothContours.size());
+
+	for (int i = 0; i < (int)(smoothContours.size()); /*nothing*/) {
+		boundRect[i] = cv::boundingRect(cv::Mat(smoothContours[i]));
+		double width = boundRect[i].width;
+		double height = boundRect[i].height;
+		double ratio = width/height;
+		if ( ratio < 3.25 || ratio > 4.25) {
+			smoothContours.erase (smoothContours.begin() + i);
+			boundRect.erase(boundRect.begin() + i);
+		}
+		else {
+			i++;
+		}
+	}
+
+	if (smoothContours.size() < 1) {
+		SmartDashboard::PutString("shooting vision error", "too few contours");
+		return;
+	}
+
+	std::vector<float> rectWidth;
+
+	for (int i = 0; i < (int)(boundRect.size()); i++) {
+		rectWidth.push_back(boundRect[i].width);
+	}
+
+
+
+
 
 }
 
@@ -250,9 +274,9 @@ std::vector<std::vector<cv::Point> >* GripPipeline::getfilterContoursOutput() {
 	}
 
 	void GripPipeline::DrawContours(cv::Mat &imageOutput, std::vector<std::vector<cv::Point>> &points, int idx, const cv::Scalar &color) {
-
 		cv::drawContours(imageOutput, points, idx, color, 3);
 	}
+
 	bool GripPipeline::FindContourArea(std::vector<cv::Point> &contour1, std::vector<cv::Point> &contour2) {
 		double i = fabs(cv::contourArea(cv::Mat(contour1)));
 		double j = fabs(cv::contourArea(cv::Mat(contour2)));

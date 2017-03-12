@@ -278,9 +278,10 @@ private:
 		double angle = gyro->GetAngle();
 
 		float turn = angle /-17.0;
-		float straight_time = 1;
+		float straight_time = 0.5;
 
 		float processed_turn = ProcessTargetTurn(0.1);
+		bool put_gear = false;
 		//arcadeDrive(0.0, 0.0);
 
 		AutoMode mode = BASELINE;
@@ -289,29 +290,29 @@ private:
 			mode = *chooser->GetSelected();
 		}
 
-		if (mode == LEFT_SIDE || mode == RIGHT_SIDE || mode == CENTER) {
+		if ((mode == LEFT_SIDE || mode == RIGHT_SIDE || mode == CENTER) && (put_gear == false )) {
 			if (mode != CENTER) {
-				straight_time = 2.8;
+				straight_time = 1.4;
 			}
 			if (time < straight_time) {
-				speed = 0.3;
+				speed = 0.6;
 				//arcadeDrive(speed, turn);
 			}
-			else if (time >= straight_time && time < straight_time + 5) {
-				speed = 0.3;
+			else if (time >= straight_time && time < straight_time + 2.5) {
+				speed = 0.6;
 				if (processed_turn !=0) {
 					process_success = true;
 					gyro->Reset();
 					turn = processed_turn;
 				}
-				else if (mode == LEFT_SIDE && (time - straight_time < 1)) {
+				else if (mode == LEFT_SIDE && (time - straight_time < .5)) {
 					turn = (angle - 60) / -60.0; //opposite turn angle
 					if (turn > 0.4) {
 						turn = 0.4;
 					}
 					speed = 0;
 				}
-				else if (mode == RIGHT_SIDE && (time - straight_time < 1)) {
+				else if (mode == RIGHT_SIDE && (time - straight_time < .5)) {
 					turn = (angle + 60) / -60.0;
 					if (turn < -0.4) {
 						turn = -0.4;
@@ -319,11 +320,11 @@ private:
 					speed = 0;
 				}
 			}
-			else if (time >= straight_time + 7.5 && time < straight_time + 8.5){
-				speed = -0.4;
+			else if (time >= straight_time + 5 && time < straight_time + 5.5){
+				speed = -0.6;//.8 is double
 			}
-			else if (time >= straight_time + 9 ){
-				speed = 0.3;
+			else if (time >= straight_time + 5.75 && time <= straight_time + 6.75 ){
+				speed = 0.6;
 				if (processed_turn !=0) {
 					gyro->Reset();
 					turn = processed_turn;
@@ -332,6 +333,21 @@ private:
 			else {
 				turn = 0;
 				speed = 0;
+				put_gear = true;
+			}
+		}
+		else if (mode == CENTER && put_gear == true) {
+			if (time >= straight_time + 6.75 && time < straight_time + 7.0) {
+				speed = -0.6;
+				shooter->shoot();
+			}
+			else if (time >= straight_time + 7.0 && time < straight_time + 7.5 ) {
+				turn = (angle - 90)/-90;
+				speed = 0;
+			}
+			else if (time >= straight_time + 7.5) {
+				turn = 0;
+				shooter->agitator();
 			}
 		}
 		else if (mode == BASELINE) {

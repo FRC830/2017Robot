@@ -35,12 +35,16 @@ class GripPipeline {
 	public:
 		GripPipeline();
 		void Process(cv::Mat &source0);
+		void boilerProcess(cv::Mat &source0);
+
 		void setsource0(cv::Mat &source0);
 		void GuideLines(cv::Mat &source);
 
 		cv::Mat* gethslThresholdOutput();
 		std::vector<std::vector<cv::Point> >* getfindContoursOutput();
 		std::vector<std::vector<cv::Point> >* getfilterContoursOutput();
+
+		std::vector<std::vector<cv:: Point>> ProcessImage(cv::Mat &source0);
 
 		void hslThreshold(cv::Mat &, double [], double [], double [], cv::Mat &);
 		void findContours(cv::Mat &, bool , std::vector<std::vector<cv::Point> > &);
@@ -54,6 +58,8 @@ class GripPipeline {
 			cv:: Mat source0;
 			std::vector<std::vector<cv::Point> > findContoursOutput;
 			std::vector<std::vector<cv::Point> > filterContourVerteciesOutput;
+			//std::vector<std::vector<cv::Point> > smoothContours;
+
 };
 
 
