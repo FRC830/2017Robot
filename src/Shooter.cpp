@@ -51,6 +51,10 @@ void Shooter::intakeBall() {
 	state = TOINTAKE;
 }
 
+void Shooter::outputBall() {
+	state = OUTPUTBALL;
+}
+
 void Shooter::stopIntake() {
 	state = NOTHING;
 }
@@ -88,13 +92,16 @@ void Shooter::update() {
 		}
 		state = NOTHING;
 	}
-	else if (state == TOINTAKE) {
-		state = NOTHING;
+	else if (state == TOINTAKE || state == OUTPUTBALL) {
 		float time = shooterTimer->Get();
+		float intake_speed = 1.0;
+		if (state == OUTPUTBALL) {
+			intake_speed = -1.0;
+		}
 		SmartDashboard::PutNumber("Intake timer", time );
 
 		if (has_intaken == false) {
-			intake->Set(1.0);
+			intake->Set(intake_speed);
 			shooterTimer->Start();
 			has_intaken = true;
 		}
@@ -104,10 +111,11 @@ void Shooter::update() {
 				shooterTimer->Stop();
 			}
 			else {
-				intake->Set(1);
+				intake->Set(intake_speed);
 			}
 		}
 		//state = INTAKE;
+		state = NOTHING;
 	}
 	else if (state == NOTHING) {
 		intake->Set(0.0);

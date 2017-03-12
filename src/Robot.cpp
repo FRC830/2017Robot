@@ -291,7 +291,7 @@ private:
 
 		if (mode == LEFT_SIDE || mode == RIGHT_SIDE || mode == CENTER) {
 			if (mode != CENTER) {
-				straight_time = 3.8;
+				straight_time = 2.8;
 			}
 			if (time < straight_time) {
 				speed = 0.3;
@@ -303,36 +303,32 @@ private:
 					process_success = true;
 					gyro->Reset();
 					turn = processed_turn;
-//					prev_process_success_turn = processed_turn;
-//					prev_process_success_time = time;
-//					//speed = 0.3;
-//				}
-//				else if (process_success && ((time - prev_process_success_time) < 0.25)) {
-//					turn = prev_process_success_turn;
 				}
-				else if (mode == LEFT_SIDE && (time - straight_time < 2)) {
+				else if (mode == LEFT_SIDE && (time - straight_time < 1)) {
 					turn = (angle - 60) / -60.0; //opposite turn angle
 					if (turn > 0.4) {
 						turn = 0.4;
 					}
 					speed = 0;
 				}
-				else if (mode == RIGHT_SIDE && (time - straight_time < 2)) {
+				else if (mode == RIGHT_SIDE && (time - straight_time < 1)) {
 					turn = (angle + 60) / -60.0;
 					if (turn < -0.4) {
 						turn = -0.4;
 					}
 					speed = 0;
 				}
-				//arcadeDrive(speed, turn, false);
 			}
-//			else if(time > 5) { //dont need
-//				if (mode == LEFT_SIDE || mode == RIGHT_SIDE) {
-//					speed = 0.5;
-//					turn = processed_turn;
-//					//arcadeDrive(0.5, processed_turn);
-//				}
-//			}
+			else if (time >= straight_time + 7.5 && time < straight_time + 8.5){
+				speed = -0.4;
+			}
+			else if (time >= straight_time + 9 ){
+				speed = 0.3;
+				if (processed_turn !=0) {
+					gyro->Reset();
+					turn = processed_turn;
+				}
+			}
 			else {
 				turn = 0;
 				speed = 0;
@@ -373,7 +369,8 @@ private:
 
 
 		//float accel_turn = (prev_weight * prev_turn) + (cur_weight * turn);
-		float accel_turn = accel(prev_turn, turn, 10);
+		float accel_turn = accel(prev_turn, turn, 9);
+		//float accel_speed = accel(prev_speed, speed, 10);
 		arcadeDrive(speed, accel_turn, false);
 		prev_turn = turn;
 		//prev_time = time;
@@ -475,6 +472,9 @@ private:
 		}
 		if (copilot->ButtonState(GamepadF310::BUTTON_A)) {
 			shooter->intakeBall();
+		}
+		if (copilot->ButtonState(GamepadF310::BUTTON_Y)) {
+			shooter->outputBall();
 		}
 
 		if (copilot->ButtonState(GamepadF310::BUTTON_X)) {
