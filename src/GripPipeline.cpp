@@ -186,7 +186,7 @@ void GripPipeline::boilerProcess(cv::Mat &source0) {
 		double width = boundRect[i].width;
 		double height = boundRect[i].height;
 		double ratio = width/height;
-		if ( ratio < 3.25 || ratio > 4.25) {
+		if ( ratio < 4.25 || ratio > 5.25) {
 			smoothContours.erase (smoothContours.begin() + i);
 			boundRect.erase(boundRect.begin() + i);
 		}
@@ -199,16 +199,24 @@ void GripPipeline::boilerProcess(cv::Mat &source0) {
 		SmartDashboard::PutString("shooting vision error", "too few contours");
 		return;
 	}
+	for (int i = 0; i < (int)(boundRect.size());) {
+		float height = boundRect[i].height;
+		float width = boundRect[i].width;
+		if (height * width > 4800) {
+			smoothContours.erase(smoothContours.begin() + i);
+		}
+		else {
+			i++;
+		}
+	}
+	boundRect.clear();
+	std::sort(smoothContours.begin(), smoothContours.end(),FindContourArea);
 
 	std::vector<float> rectWidth;
 
 	for (int i = 0; i < (int)(boundRect.size()); i++) {
 		rectWidth.push_back(boundRect[i].width);
 	}
-
-
-
-
 
 }
 
