@@ -64,7 +64,7 @@ private:
 	DigitalOutput * climbingSwitch;
 
 	SendableChooser<AutoMode*> *chooser;
-	static const int TICKS_TO_ACCEL = 10;
+	static const int TICKS_TO_ACCEL = 15;
 
 	Shooter * shooter;
 
@@ -406,8 +406,16 @@ private:
 		if (fabs(targetSpeed) < 0.13) {
 			targetSpeed = 0;
 		}
+
+		double bVoltage = DriverStation::GetInstance().GetBatteryVoltage();
+		if (bVoltage < 8.0) {
+			targetSpeed = targetSpeed/2;
+		}
+
 		float speed = accel(previousSpeed, targetSpeed, TICKS_TO_ACCEL);
 		previousSpeed = speed;
+
+
 
 		double angle = gyro->GetAngle();
 
