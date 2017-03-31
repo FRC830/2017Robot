@@ -212,11 +212,22 @@ void GripPipeline::boilerProcess(cv::Mat &source0) {
 	boundRect.clear();
 	std::sort(smoothContours.begin(), smoothContours.end(),FindContourArea);
 
-	std::vector<float> rectWidth;
+	boundRect.resize(1);
 
-	for (int i = 0; i < (int)(boundRect.size()); i++) {
-		rectWidth.push_back(boundRect[i].width);
-	}
+	boundRect[0] = cv::boundingRect(cv::Mat(smoothContours[0]));
+	cv::Scalar color_2(255,255,0);
+	cv::rectangle(source0,boundRect[0],color_2, 2);
+
+	double centerX = (boundRect[0].tl().x + boundRect[0].br().x)/2;
+	cv::Point rectCenter (centerX , boundRect[0].tl().y);
+
+	cv::Scalar color (120,30,75);
+	cv::line(source0, rectCenter, rectCenter, color, 2);
+
+	SmartDashboard::PutNumber("center shooter X", rectCenter.x);
+	cv::Scalar color_3 (0,255,255);
+	cv::line(source0, cv::Point2f(160,0), cv::Point2f(160,240),color_3,2 );
+	cv::line(source0, cv::Point2f(0,120), cv::Point2f(320,120), color_3,2);
 
 }
 
