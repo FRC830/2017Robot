@@ -64,7 +64,7 @@ private:
 	DigitalOutput * climbingSwitch;
 
 	SendableChooser<AutoMode*> *chooser;
-	static const int TICKS_TO_ACCEL = 15;
+	static const int TICKS_TO_ACCEL = 10;
 
 	Shooter * shooter;
 
@@ -280,7 +280,7 @@ private:
 		float turn = angle /-17.0;
 		float straight_time = 1;
 
-		float processed_turn = ProcessTargetTurn(0.11);
+		float processed_turn = ProcessTargetTurn(0.1);
 		//arcadeDrive(0.0, 0.0);
 
 		AutoMode mode = BASELINE;
@@ -291,7 +291,7 @@ private:
 
 		if (mode == LEFT_SIDE || mode == RIGHT_SIDE || mode == CENTER) {
 			if (mode != CENTER) {
-				straight_time = 2.65;
+				straight_time = 2.8;
 			}
 			if (time < straight_time) {
 				speed = 0.3;
@@ -406,13 +406,8 @@ private:
 	void TeleopPeriodic()
 	{
 
-		float targetSpeed = 0;
-		if (pilot->ButtonState(GamepadF310::BUTTON_B)) {
-			targetSpeed = pilot->LeftY();
-		}
-		else {
-			targetSpeed = (pilot->LeftY) * 0.8;
-		}
+		float targetSpeed = pilot->LeftY();
+
 		if (fabs(targetSpeed) < 0.13) {
 			targetSpeed = 0;
 		}
@@ -457,7 +452,7 @@ private:
 			SmartDashboard::PutBoolean("target bool", highGoalCorrect);
 		}
 
-		float turn = accel(previousTurn, targetTurn, 15);
+		float turn = accel(previousTurn, targetTurn, 10);
 		previousTurn = targetTurn;
 		SmartDashboard::PutNumber("real turn", turn);
 
