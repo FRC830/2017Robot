@@ -8,16 +8,19 @@
 #include "Shooter.h"
 #include "Timer.h"
 
-Shooter::Shooter(VictorSP * intakeMotor, VictorSP* shooterMotor, Spark *ball_output, LineBreakCounter * shoot_speed /*probably some sort of switch*/) {
+Shooter::Shooter(VictorSP * intakeMotor, VictorSP* shooterMotor, /*Spark *ball_output,*/ LineBreakCounter * shoot_speed /*probably some sort of switch*/) {
 	// TODO Auto-generated constructor stub
 	p = 0.1;
 	i = 0.0;
 	d = 0.0;
+
+	//speed = 0.0;
+
 	has_intaken = false;
 	intake = intakeMotor;
 	shooter = shooterMotor;
 	shootSpeed = shoot_speed;
-	ballOutput = ball_output;
+	//ballOutput = ball_output;
 	speedPID = new PIDController(p,i,d, shootSpeed, shooter);
 	shooterTimer = new Timer();
 	speedPID->SetInputRange(0,1000);
@@ -40,9 +43,9 @@ void Shooter::shoot() {
 	state = SHOOTING;
 }
 
-void Shooter::agitator() {
+/*void Shooter::agitator() {
 	state = OUTPUT;
-}
+}*/
 
 void Shooter::manualShoot() {
 	state = MANUAL_SHOOT;
@@ -82,16 +85,17 @@ void Shooter::update() {
 		else {
 			shooter->Set(1.0);
 		}
+
 		state = NOTHING;
 	}
-	else if (state == OUTPUT || state == INTAKE_OUTPUT) {
-		ballOutput->Set(1.0);
-		SmartDashboard::PutNumber("agitator speeed", ballOutput->Get());
-		if (state == INTAKE_OUTPUT) {
-			intake->Set(1);
-		}
-		state = NOTHING;
-	}
+//	else if (state == OUTPUT || state == INTAKE_OUTPUT) {
+//		ballOutput->Set(0.5);
+//		SmartDashboard::PutNumber("agitator speeed", ballOutput->Get());
+//		if (state == INTAKE_OUTPUT) {
+//			intake->Set(1);
+//		}
+//		state = NOTHING;
+//	}
 	else if (state == TOINTAKE || state == OUTPUTBALL) {
 		float time = shooterTimer->Get();
 		float intake_speed = 1.0;
@@ -121,7 +125,7 @@ void Shooter::update() {
 		intake->Set(0.0);
 		shooter->Set(0.0);
 		speedPID->SetSetpoint(0.0);
-		ballOutput->Set(0.0);
+		//ballOutput->Set(0.0);
 
 		has_intaken = false;
 		//shooterToSpeed = false;

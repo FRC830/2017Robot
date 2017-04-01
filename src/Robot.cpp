@@ -68,7 +68,7 @@ private:
 
 	Shooter * shooter;
 
-	VictorSP *agitator;
+	Spark *agitator;
 
 	void arcadeDrive(double speed, double turn, bool squaredinputs = false, bool inverted_control = false) {
 		if (inverted_control == true) {
@@ -178,11 +178,11 @@ private:
 		shooter = new Shooter(
 				new VictorSP(INTAKE_PWM),
 				new VictorSP(SHOOTER_PWM),
-				new Spark(BALL_OUTPUTPWM),
+				//new Spark(BALL_OUTPUTPWM),
 				new LineBreakCounter(COUNTER_DIO)
 		);
 
-		agitator = new VictorSP(BALL_OUTPUTPWM);
+		agitator = new Spark(BALL_OUTPUTPWM);
 
 		std::thread visionThread(CameraPeriodic);
 		visionThread.detach();
@@ -280,7 +280,7 @@ private:
 		float turn = angle /-17.0;
 		float straight_time = 1;
 
-		float processed_turn = ProcessTargetTurn(0.1);
+		float processed_turn = ProcessTargetTurn(0.11);
 		//arcadeDrive(0.0, 0.0);
 
 		AutoMode mode = BASELINE;
@@ -291,7 +291,7 @@ private:
 
 		if (mode == LEFT_SIDE || mode == RIGHT_SIDE || mode == CENTER) {
 			if (mode != CENTER) {
-				straight_time = 2.8;
+				straight_time = 2.65;
 			}
 			if (time < straight_time) {
 				speed = 0.3;
@@ -299,7 +299,7 @@ private:
 			}
 			else if (time >= straight_time && time < straight_time + 5) {
 				speed = 0.3;
-				if (processed_turn !=0) {
+				if (processed_turn !=0 && time > straight_time + 1) {
 					process_success = true;
 					gyro->Reset();
 					turn = processed_turn;
@@ -319,10 +319,10 @@ private:
 					speed = 0;
 				}
 			}
-			else if (time >= straight_time + 7.5 && time < straight_time + 8.5){
+			else if (time >= straight_time + 7.5 && time < straight_time + 8.2){
 				speed = -0.4;
 			}
-			else if (time >= straight_time + 9 ){
+			else if (time >= straight_time + 8.5 ){
 				speed = 0.3;
 				if (processed_turn !=0) {
 					gyro->Reset();
@@ -399,13 +399,24 @@ private:
 	}
 	bool invert = false;
 	bool x_was_pressed = false;
+
+	bool was_shooting = false;
+	bool toggle_shoot = false;
+	//bool shooting = false;
 	void TeleopPeriodic()
 	{
 
-		float targetSpeed = pilot->LeftY();
+		float targetSpeed = 0;
+		if (pilot->ButtonState(GamepadF310::BUTTON_B)) {
+			targetSpeed = pilot->LeftY();
+		}
+		else {
+			targetSpeed = (pilot->LeftY) * 0.8;
+		}
 		if (fabs(targetSpeed) < 0.13) {
 			targetSpeed = 0;
 		}
+
 
 		double bVoltage = DriverStation::GetInstance().GetBatteryVoltage();
 		if (bVoltage < 8.0) {
@@ -446,7 +457,7 @@ private:
 			SmartDashboard::PutBoolean("target bool", highGoalCorrect);
 		}
 
-		float turn = accel(previousTurn, targetTurn, 10);
+		float turn = accel(previousTurn, targetTurn, 15);
 		previousTurn = targetTurn;
 		SmartDashboard::PutNumber("real turn", turn);
 
@@ -468,7 +479,7 @@ private:
 		arcadeDrive(speed, turn, false, invert);
 
 		SmartDashboard::PutBoolean("Climber Switch", climbingSwitch->Get());
-		if (climbingSwitch->Get() == false || copilot->DPadUp()) {
+		if (climbingSwitch->Get() == false || copilot->DPadDown()) {
 			climber->Set(-(copilot->RightTrigger()));
 		}
 
@@ -485,24 +496,48 @@ private:
 			shooter->outputBall();
 		}
 
-		if (copilot->ButtonState(GamepadF310::BUTTON_X)) {
-			shooter->agitator();
-			//agitator->Set(1.0);
-		}
-//		else {
-//			agitator->Set(0);
+//		if (fabs(copilot->LeftY()) < 0.12) {
+//			shooter->agitator();
 //		}
 
-		if (copilot->LeftTrigger() > 0.5) {
-			//shooter->stopShoot();
-			//shooter->manualShoot();
+		//if(copilot->ButtonState(GamepadF310::BUTTON_X) && copilot->LeftTrigger() > 0.5) {}
+
+
+		if(copilot->ButtonState(GamepadF310::BUTTON_X)) {
+			agitator->Set(0.5);
+			SmartDashboard::PutString("agitator string", "it should be working");
+		}
+		else {
+			agitator->Set(0);
+			SmartDashboard::PutString("agitator string", "it is not working");
+		}
+		SmartDashboard::PutNumber("agitator", agitator->Get());
+
+
+		bool shooting = copilot->DPadUp();
+//		if (copilot->LeftTrigger() > 0.5) {
+//			shooting = true;
+//			//shooter->stopShoot();
+//			//shooter->manualShoot();
+//		}
+//		else {
+//			shooting = false;
+//		}
+
+		if (shooting != was_shooting && shooting == true) {
+			toggle_shoot = !toggle_shoot;
+		}
+
+		was_shooting = shooting;
+
+		if (toggle_shoot == true) {
 			shooter->shoot();
 		}
-		if (copilot->DPadUp()) {
-			shooter->agitatorIntake();
-		}
+
+//		if (copilot->DPadUp()) {
+//			shooter->agitatorIntake();
+//		}
 		shooter->update();
-		SmartDashboard::PutNumber("agitator", agitator->Get());
 
 //		LED->Set(copilot->LeftTrigger(), copilot->RightTrigger(), fabs(copilot->LeftY()));
 	}

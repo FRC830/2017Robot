@@ -12,10 +12,10 @@
 
 class Shooter {
 public:
-	Shooter(VictorSP * intakeMotor, VictorSP* shooterMotor, Spark *ball_output, LineBreakCounter* shoot_speed /*probably some sort of swtich*/);
+	Shooter(VictorSP * intakeMotor, VictorSP* shooterMotor,/* Spark *ball_output,*/ LineBreakCounter* shoot_speed /*probably some sort of swtich*/);
 	VictorSP * intake;
 	VictorSP * shooter;
-	Spark *ballOutput;
+	//Spark *ballOutput;
 	LineBreakCounter * shootSpeed;
 	PIDController * speedPID;
 	float p,i,d;
@@ -30,7 +30,7 @@ public:
 	void stopIntake();
 	void stopShoot();
 	void update();
-	void agitator();
+	//void agitator();
 	void manualShoot();
 	void stopBallOutPut();
 	void intakeOverRide();
