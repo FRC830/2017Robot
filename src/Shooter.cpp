@@ -10,7 +10,7 @@
 
 Shooter::Shooter(VictorSP * intakeMotor, VictorSP* shooterMotor, /*Spark *ball_output,*/ LineBreakCounter * shoot_speed /*probably some sort of switch*/) {
 	// TODO Auto-generated constructor stub
-	p = 0.1;
+	p = 0.1f;
 	i = 0.0;
 	d = 0.0;
 
@@ -78,7 +78,7 @@ void Shooter::update() {
 	if (state == SHOOTING || state == MANUAL_SHOOT) {
 		//ballOutput->Set(1.0);
 		if (state == SHOOTING){
-			speedPID->SetSetpoint(SmartDashboard::GetNumber("revolutions",60));//20
+			speedPID->SetSetpoint(SmartDashboard::GetNumber("revolutions",70));//20
 			SmartDashboard::PutNumber("PID error",speedPID->GetError());
 			SmartDashboard::PutString("state1", "shooting state");
 		}

@@ -19,7 +19,7 @@ class Robot: public IterativeRobot
 	float previousTurn = 0;
 	float previousSpeed = 0;
 public:
-	enum AutoMode {LEFT_SIDE, RIGHT_SIDE, CENTER, BASELINE, NOTHING, BAD_GYRO};
+	enum AutoMode {LEFT_SIDE, RIGHT_SIDE, CENTER, BASELINE, NOTHING, BAD_GYRO, CENTER_SHOOT};
 private:
 	//drivetrain motors
 	static const int LEFT_PWM_ONE = 0; // 0 is 10 on electrical board
@@ -167,6 +167,7 @@ private:
 		chooser->AddObject("Center", new AutoMode(CENTER));
 		chooser->AddObject("default", new AutoMode(NOTHING));
 		chooser->AddObject("bad gyro", new AutoMode(BAD_GYRO));
+		chooser->AddObject("center and shoot", new AutoMode(CENTER_SHOOT));
 		SmartDashboard::PutData("Auto Modes", chooser);
 		
 		SmartDashboard::PutNumber("P",3);
@@ -237,6 +238,11 @@ private:
 		timer.Reset();
 		timer.Start();
 		gyro->Reset();
+		float p = SmartDashboard::GetNumber("P",4.0);
+		float i = SmartDashboard::GetNumber("I",1.1);
+		float d = SmartDashboard::GetNumber("D",0.0);
+
+		shooter->setPIDValues(p,i,d);
 		//shooter->
 
 		//autonChooser
@@ -289,8 +295,8 @@ private:
 			mode = *chooser->GetSelected();
 		}
 
-		if (mode == LEFT_SIDE || mode == RIGHT_SIDE || mode == CENTER) {
-			if (mode != CENTER) {
+		if (mode == LEFT_SIDE || mode == RIGHT_SIDE || mode == CENTER || mode == CENTER_SHOOT) {
+			if (mode != CENTER || CENTER_SHOOT) {
 				straight_time = 2.8;
 			}
 			if (time < straight_time) {
@@ -299,7 +305,7 @@ private:
 			}
 			else if (time >= straight_time && time < straight_time + 5) {
 				speed = 0.3;
-				if (processed_turn !=0 && time > straight_time + 1) {
+				if (processed_turn !=0 && time > straight_time + 1 && time < straight_time + 8) {
 					process_success = true;
 					gyro->Reset();
 					turn = processed_turn;
@@ -319,14 +325,38 @@ private:
 					speed = 0;
 				}
 			}
-			else if (time >= straight_time + 7.5 && time < straight_time + 8.2){
-				speed = -0.4;
-			}
-			else if (time >= straight_time + 8.5 ){
-				speed = 0.3;
-				if (processed_turn !=0) {
-					gyro->Reset();
-					turn = processed_turn;
+			else if (time > straight_time + 7.5) {
+				if (mode != CENTER_SHOOT) {
+					if (time >= straight_time + 7.5 && time < straight_time + 8.2){
+						speed = -0.4;
+					}
+					else if (time >= straight_time + 8.5 ){
+						speed = 0.3;
+						if (processed_turn !=0) {
+							gyro->Reset();
+							turn = processed_turn;
+						}
+					}
+				}
+				else {
+					float shoot_time = (2* straight_time) + 7.5;
+					if (time < shoot_time) {
+						speed = -0.3;
+						shooter->manualShoot();
+
+					}
+					else if (time > shoot_time && time < shoot_time + 1) {
+						turn = (angle + 90) /-100;
+						shooter->manualShoot();
+						speed = 0;
+					}
+					else if (time > shoot_time + 1) {
+						turn = 0;
+						speed = 0;
+						shooter->manualShoot();
+						agitator->Set(0.5);
+					}
+
 				}
 			}
 			else {
@@ -384,6 +414,7 @@ private:
 		SmartDashboard::PutNumber("accel_turn", accel_turn);
 		SmartDashboard::PutNumber("time", time);
 		SmartDashboard::PutNumber("gyro angle", angle);
+		shooter->update();
 
 	}
 
@@ -391,8 +422,8 @@ private:
 	{
 		gyro->Reset();
 		LED->Disable();
-		float p = SmartDashboard::GetNumber("P",3);
-		float i = SmartDashboard::GetNumber("I",1);
+		float p = SmartDashboard::GetNumber("P",4);
+		float i = SmartDashboard::GetNumber("I",1.1);
 		float d = SmartDashboard::GetNumber("D",0);
 
 		shooter->setPIDValues(p,i,d);
