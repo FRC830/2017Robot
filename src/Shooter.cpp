@@ -41,6 +41,7 @@ void Shooter::setPIDValues(float p, float i, float d) {
 
 void Shooter::shoot() {
 	state = SHOOTING;
+	speedPID->SetSetpoint(SmartDashboard::GetNumber("revolutions",65));//20
 }
 
 /*void Shooter::agitator() {
@@ -78,13 +79,13 @@ void Shooter::update() {
 	if (state == SHOOTING || state == MANUAL_SHOOT) {
 		//ballOutput->Set(1.0);
 		if (state == SHOOTING){
-			speedPID->SetSetpoint(SmartDashboard::GetNumber("revolutions",70));//20
 			SmartDashboard::PutNumber("PID error",speedPID->GetError());
 			SmartDashboard::PutString("state1", "shooting state");
 		}
 		else {
-			shooter->Set(1.0);
+			shooter->Set(0.8);
 		}
+		intake->Set(1);
 
 		state = NOTHING;
 	}

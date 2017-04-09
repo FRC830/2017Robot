@@ -170,11 +170,11 @@ private:
 		chooser->AddObject("center and shoot", new AutoMode(CENTER_SHOOT));
 		SmartDashboard::PutData("Auto Modes", chooser);
 		
-		SmartDashboard::PutNumber("P",3);
+		SmartDashboard::PutNumber("P",9);
 		SmartDashboard::PutNumber("I",1);
 		SmartDashboard::PutNumber("D",0);
 
-		SmartDashboard::PutNumber("revolutions",60);
+		SmartDashboard::PutNumber("revolutions",65);
 
 		shooter = new Shooter(
 				new VictorSP(INTAKE_PWM),
@@ -238,7 +238,7 @@ private:
 		timer.Reset();
 		timer.Start();
 		gyro->Reset();
-		float p = SmartDashboard::GetNumber("P",4.0);
+		float p = SmartDashboard::GetNumber("P",9.0);
 		float i = SmartDashboard::GetNumber("I",1.1);
 		float d = SmartDashboard::GetNumber("D",0.0);
 
@@ -282,6 +282,7 @@ private:
 		float speed = 0;
 
 		double angle = gyro->GetAngle();
+		agitator->Set(0);
 
 		float turn = angle /-17.0;
 		float straight_time = 1;
@@ -422,7 +423,7 @@ private:
 	{
 		gyro->Reset();
 		LED->Disable();
-		float p = SmartDashboard::GetNumber("P",4);
+		float p = SmartDashboard::GetNumber("P",9);
 		float i = SmartDashboard::GetNumber("I",1.1);
 		float d = SmartDashboard::GetNumber("D",0);
 
