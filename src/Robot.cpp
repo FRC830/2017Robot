@@ -1,3 +1,11 @@
+/*2017 Competition Robot SAURON
+ * Pilot drives left joystick
+ * Copilot X button stirs the wiffle balls
+ * Copilot B button shoots the balls out the bottom
+ * Copilot A button intakes the balls
+ * Copilot Y button toggles LEDs
+ * DPad up turns shooter on
+ */
 #include "WPILib.h"
 #include "CameraServer.h"
 #include "Lib830.h"
@@ -512,14 +520,14 @@ private:
 
 		//LED->SetAllianceColor();
 		//LED->Set(0,1,0);
-		if (copilot->ButtonState(GamepadF310::BUTTON_B)) {
+		if (copilot->ButtonState(GamepadF310::BUTTON_Y)) {
 			LED->Set(0,1,0);
 
 		}
 		if (copilot->ButtonState(GamepadF310::BUTTON_A)) {
 			shooter->intakeBall();
 		}
-		if (copilot->ButtonState(GamepadF310::BUTTON_Y)) {
+		if (copilot->ButtonState(GamepadF310::BUTTON_B)) {
 			shooter->outputBall();
 		}
 
@@ -528,18 +536,6 @@ private:
 //		}
 
 		//if(copilot->ButtonState(GamepadF310::BUTTON_X) && copilot->LeftTrigger() > 0.5) {}
-
-
-		if(copilot->ButtonState(GamepadF310::BUTTON_X)) {
-			agitator->Set(0.5);
-			SmartDashboard::PutString("agitator string", "it should be working");
-		}
-		else {
-			agitator->Set(0);
-			SmartDashboard::PutString("agitator string", "it is not working");
-		}
-		SmartDashboard::PutNumber("agitator", agitator->Get());
-
 
 		bool shooting = copilot->DPadUp();
 //		if (copilot->LeftTrigger() > 0.5) {
@@ -564,6 +560,18 @@ private:
 //		if (copilot->DPadUp()) {
 //			shooter->agitatorIntake();
 //		}
+		if (copilot->ButtonState(GamepadF310::BUTTON_X)){
+			shooter->shoot();
+			agitator->Set(0.5);
+			SmartDashboard::PutString("agitator string", "it should be working");
+		} else {
+			agitator->Set(0);
+			SmartDashboard::PutString("agitator string", "it is not working");
+		}
+		if (copilot->LeftTrigger() > 0.5) {
+			agitator->Set(0.5);
+		}
+		SmartDashboard::PutNumber("agitator", agitator->Get());
 		shooter->update();
 
 //		LED->Set(copilot->LeftTrigger(), copilot->RightTrigger(), fabs(copilot->LeftY()));
