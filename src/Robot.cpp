@@ -513,43 +513,34 @@ private:
 		SmartDashboard::PutBoolean("invert", invert);
 		arcadeDrive(speed, turn, false, invert);
 
+		//Climb with right trigger when the limit switch isn't down; override limit switch with down on Dpad
 		SmartDashboard::PutBoolean("Climber Switch", climbingSwitch->Get());
 		if (climbingSwitch->Get() == false || copilot->DPadDown()) {
 			climber->Set(-(copilot->RightTrigger()));
 		}
 
-		//LED->SetAllianceColor();
-		//LED->Set(0,1,0);
+		//change lights to green with Y button on copilot
 		if (copilot->ButtonState(GamepadF310::BUTTON_Y)) {
 			LED->Set(0,1,0);
-
 		}
+
+		//Pull balls in with copilot A
 		if (copilot->ButtonState(GamepadF310::BUTTON_A)) {
 			shooter->intakeBall();
 		}
+
+		//Push balls out with copilot B
 		if (copilot->ButtonState(GamepadF310::BUTTON_B)) {
 			shooter->outputBall();
 		}
 
-//		if (fabs(copilot->LeftY()) < 0.12) {
-//			shooter->agitator();
-//		}
-
-		//if(copilot->ButtonState(GamepadF310::BUTTON_X) && copilot->LeftTrigger() > 0.5) {}
-
+		//Dpad up toggles shooter
 		bool shooting = copilot->DPadUp();
-//		if (copilot->LeftTrigger() > 0.5) {
-//			shooting = true;
-//			//shooter->stopShoot();
-//			//shooter->manualShoot();
-//		}
-//		else {
-//			shooting = false;
-//		}
 
 		if (shooting != was_shooting && shooting == true) {
 			toggle_shoot = !toggle_shoot;
 		}
+
 
 		was_shooting = shooting;
 
@@ -557,9 +548,12 @@ private:
 			shooter->shoot();
 		}
 
-//		if (copilot->DPadUp()) {
-//			shooter->agitatorIntake();
-//		}
+		//Left trigger turns on agitator
+		if (copilot->LeftTrigger() > 0.5) {
+			agitator->Set(0.5);
+		}
+
+		//X turns on input, shooter, and agitator
 		if (copilot->ButtonState(GamepadF310::BUTTON_X)){
 			shooter->shoot();
 			agitator->Set(0.5);
@@ -568,13 +562,9 @@ private:
 			agitator->Set(0);
 			SmartDashboard::PutString("agitator string", "it is not working");
 		}
-		if (copilot->LeftTrigger() > 0.5) {
-			agitator->Set(0.5);
-		}
 		SmartDashboard::PutNumber("agitator", agitator->Get());
 		shooter->update();
 
-//		LED->Set(copilot->LeftTrigger(), copilot->RightTrigger(), fabs(copilot->LeftY()));
 	}
 	void TestPeriodic()
 	{
@@ -585,8 +575,9 @@ private:
 	}
 	void DisabledPeriodic() {
 		arcadeDrive(0.0,0.0);
-		DigitalLED::Color imperfectYellow = {1,0.6,0};
-		LED->Alternate(imperfectYellow, {0,0,1});
+//		DigitalLED::Color imperfectYellow = {1,0.6,0};
+//		LED->Alternate(imperfectYellow, {0,0,1});
+		LED->Set(, , );
 		float angle = gyro->GetAngle();
 		SmartDashboard::PutNumber("gyro angle", angle);
 
