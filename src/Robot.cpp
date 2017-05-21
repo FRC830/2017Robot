@@ -179,8 +179,8 @@ private:
 		SmartDashboard::PutData("Auto Modes", chooser);
 		
 		SmartDashboard::PutNumber("P",9);
-		SmartDashboard::PutNumber("I",1);
-		SmartDashboard::PutNumber("D",0);
+		SmartDashboard::PutNumber("I",2);
+		SmartDashboard::PutNumber("D",2);
 
 		SmartDashboard::PutNumber("revolutions",65);
 
@@ -577,7 +577,7 @@ private:
 		arcadeDrive(0.0,0.0);
 //		DigitalLED::Color imperfectYellow = {1,0.6,0};
 //		LED->Alternate(imperfectYellow, {0,0,1});
-		LED->Set(, , );
+		//LED->Set(, , );
 		float angle = gyro->GetAngle();
 		SmartDashboard::PutNumber("gyro angle", angle);
 

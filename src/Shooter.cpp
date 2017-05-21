@@ -85,7 +85,7 @@ void Shooter::update() {
 		else {
 			shooter->Set(0.8);
 		}
-		intake->Set(1);
+		//intake->Set(1);
 
 		state = NOTHING;
 	}
