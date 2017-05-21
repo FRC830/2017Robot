@@ -125,7 +125,7 @@ private:
 				pipeline->GuideLines(image);
 			}
 			else {
-				pipeline->Process(image);
+				pipeline->boilerProcess(image);
 			}
 			//outputStream.PutFrame(*pipeline->gethslThresholdOutput());
 			outputStream.PutFrame(image);
