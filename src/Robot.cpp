@@ -558,7 +558,7 @@ private:
 			shooter->shoot();
 			agitator->Set(0.5);
 			SmartDashboard::PutString("agitator string", "it should be working");
-		} else {
+		} else if (copilot->LeftTrigger() < 0.5) {
 			agitator->Set(0);
 			SmartDashboard::PutString("agitator string", "it is not working");
 		}
