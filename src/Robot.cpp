@@ -24,11 +24,11 @@ using namespace Lib830;
 
 class Robot: public IterativeRobot
 {
-	float previousTurn = 0;
-	float previousSpeed = 0;
 public:
 	enum AutoMode {LEFT_SIDE, RIGHT_SIDE, CENTER, BASELINE, NOTHING, BAD_GYRO, CENTER_SHOOT};
 private:
+	float previousTurn = 0;
+	float previousSpeed = 0;
 	//drivetrain motors
 	static const int LEFT_PWM_ONE = 0; // 0 is 10 on electrical board
 	static const int LEFT_PWM_TWO = 1;
