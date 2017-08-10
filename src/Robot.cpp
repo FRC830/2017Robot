@@ -426,6 +426,15 @@ private:
 		shooter->update();
 
 	}
+	bool Toggle(bool &was_state, bool cur_state, bool &state ) {
+		if (cur_state == true && was_state != cur_state) {
+			state = !state;
+		}
+		was_state = cur_state;
+		SmartDashboard::PutBoolean("state", state);
+		return state;
+	}
+
 
 	void TeleopInit()
 	{
@@ -438,6 +447,7 @@ private:
 		shooter->setPIDValues(p,i,d);
 	}
 	bool invert = false;
+
 	bool x_was_pressed = false;
 
 	bool was_shooting = false;
@@ -535,7 +545,7 @@ private:
 		}
 
 		//Dpad up toggles shooter
-		bool shooting = copilot->DPadUp();
+		/*bool shooting = copilot->DPadUp();
 
 		if (shooting != was_shooting && shooting == true) {
 			toggle_shoot = !toggle_shoot;
@@ -545,6 +555,10 @@ private:
 		was_shooting = shooting;
 
 		if (toggle_shoot == true) {
+			shooter->shoot();
+		}*/
+
+		if (Toggle(was_shooting, copilot->DPadUp(), toggle_shoot)) {
 			shooter->shoot();
 		}
 
