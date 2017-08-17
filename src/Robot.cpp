@@ -19,6 +19,7 @@
 #include "util/Algorithms.h"
 #include "math.h"
 #include "Shooter.h"
+#include "input/Toggle.h"
 
 using namespace Lib830;
 
@@ -77,6 +78,9 @@ private:
 	Shooter * shooter;
 
 	Spark *agitator;
+
+
+
 
 	void arcadeDrive(double speed, double turn, bool squaredinputs = false, bool inverted_control = false) {
 		if (inverted_control == true) {
@@ -426,14 +430,14 @@ private:
 		shooter->update();
 
 	}
-	bool Toggle(bool &was_state, bool cur_state, bool &state ) {
-		if (cur_state == true && was_state != cur_state) {
-			state = !state;
-		}
-		was_state = cur_state;
-		SmartDashboard::PutBoolean("state", state);
-		return state;
-	}
+//	bool Toggle(bool &was_state, bool cur_state, bool &state ) {
+//		if (cur_state == true && was_state != cur_state) {
+//			state = !state;
+//		}
+//		was_state = cur_state;
+//		SmartDashboard::PutBoolean("state", state);
+//		return state;
+//	}
 
 
 	void TeleopInit()
@@ -446,12 +450,9 @@ private:
 
 		shooter->setPIDValues(p,i,d);
 	}
-	bool invert = false;
+	Toggle invert_drive;
+	Toggle shooter_toggle;
 
-	bool x_was_pressed = false;
-
-	bool was_shooting = false;
-	bool toggle_shoot = false;
 	//bool shooting = false;
 	void TeleopPeriodic()
 	{
@@ -506,22 +507,15 @@ private:
 		previousTurn = targetTurn;
 		SmartDashboard::PutNumber("real turn", turn);
 
-		bool x_pressed = pilot->ButtonState(GamepadF310::BUTTON_X);
 
-		if (x_pressed != x_was_pressed && x_pressed) {
-			//arcadeDrive(speed, turn, false, true);
-			invert = !invert;
-		}
-		x_was_pressed = x_pressed;
-
-		if (invert == true) {
+		if (invert_drive.toggle(pilot->ButtonState(GamepadF310::BUTTON_X))) {
 			LED->Set(0.5,0.0,0.5);
 		}
 		else {
 			LED->SetAllianceColor();
 		}
-		SmartDashboard::PutBoolean("invert", invert);
-		arcadeDrive(speed, turn, false, invert);
+		SmartDashboard::PutBoolean("invert", invert_drive);
+		arcadeDrive(speed, turn, false, invert_drive);
 
 		//Climb with right trigger when the limit switch isn't down; override limit switch with down on Dpad
 		SmartDashboard::PutBoolean("Climber Switch", climbingSwitch->Get());
@@ -545,20 +539,8 @@ private:
 		}
 
 		//Dpad up toggles shooter
-		/*bool shooting = copilot->DPadUp();
 
-		if (shooting != was_shooting && shooting == true) {
-			toggle_shoot = !toggle_shoot;
-		}
-
-
-		was_shooting = shooting;
-
-		if (toggle_shoot == true) {
-			shooter->shoot();
-		}*/
-
-		if (Toggle(was_shooting, copilot->DPadUp(), toggle_shoot)) {
+		if (shooter_toggle.toggle(copilot->DPadUp())) {
 			shooter->shoot();
 		}
 
