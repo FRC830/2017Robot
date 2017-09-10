@@ -24,7 +24,7 @@ Shooter::Shooter(VictorSP * intakeMotor, VictorSP* shooterMotor, /*Spark *ball_o
 	speedPID = new PIDController(p,i,d, shootSpeed, shooter);
 	shooterTimer = new Timer();
 	speedPID->SetInputRange(0,1000);
-	speedPID->SetOutputRange(0,1);
+	speedPID->SetOutputRange(0.0,1.0);
 	speedPID->SetAbsoluteTolerance(5); //subject to change
 	speedPID->Enable();
 
@@ -76,6 +76,7 @@ void Shooter::agitatorIntake() {
 
 void Shooter::update() {
 	SmartDashboard::PutNumber("state", state);
+	SmartDashboard::PutNumber("shooter speed", shooter->Get());
 	if (state == SHOOTING || state == MANUAL_SHOOT) {
 		//ballOutput->Set(1.0);
 		if (state == SHOOTING){

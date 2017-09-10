@@ -19,7 +19,8 @@
 #include "util/Algorithms.h"
 #include "math.h"
 #include "Shooter.h"
-#include "input/Toggle.h"
+//#include "input/Toggle.h"
+#include "Toggle.h"
 
 using namespace Lib830;
 
@@ -39,7 +40,7 @@ private:
 	static const int CLIMBER_PWM = 3; //CB
 
 	static const int BALL_OUTPUTPWM = 2;
-	static const int SHOOTER_PWM =  5;//SH
+	static const int SHOOTER_PWM =  4;//SH
 	static const int INTAKE_PWM = 7;//IT
 	static const int COUNTER_DIO = 1;
 
@@ -156,7 +157,7 @@ private:
 		);
 
 		LED = new DigitalLED(RED_LED_DIO, GREEN_LED_DIO, BLUE_LED_DIO);
-		LED->Set(1, 0, 0.5);
+		LED->Set(0, 0, 0.5);
 
 		/*drive = new RobotDrive(
 			new VictorSP(LEFT_PWM_TWO), //8
@@ -185,6 +186,11 @@ private:
 		SmartDashboard::PutNumber("P",9);
 		SmartDashboard::PutNumber("I",2);
 		SmartDashboard::PutNumber("D",2);
+
+		SmartDashboard::PutNumber("Blue value",1);
+		//SmartDashboard::PutNumber("Red value",1);
+		SmartDashboard::PutNumber("Green value",1);
+
 
 		SmartDashboard::PutNumber("revolutions",65);
 
@@ -439,6 +445,9 @@ private:
 //		return state;
 //	}
 
+	float blue;
+	float green;
+	float red = 1;
 
 	void TeleopInit()
 	{
@@ -447,6 +456,10 @@ private:
 		float p = SmartDashboard::GetNumber("P",9);
 		float i = SmartDashboard::GetNumber("I",1.1);
 		float d = SmartDashboard::GetNumber("D",0);
+
+		blue = SmartDashboard::GetNumber("Blue value", 1.0);
+		green = SmartDashboard::GetNumber("Green value", 1.0);
+		//red = SmartDashboard::GetNumber("Red value", 1.0);
 
 		shooter->setPIDValues(p,i,d);
 	}
@@ -524,8 +537,9 @@ private:
 		}
 
 		//change lights to green with Y button on copilot
+
 		if (copilot->ButtonState(GamepadF310::BUTTON_Y)) {
-			LED->Set(0,1,0);
+			LED->Set(red,green,blue);
 		}
 
 		//Pull balls in with copilot A
@@ -543,6 +557,9 @@ private:
 		if (shooter_toggle.toggle(copilot->DPadUp())) {
 			shooter->shoot();
 		}
+		else {
+			shooter->stopShoot();
+		}
 
 		//Left trigger turns on agitator
 		if (copilot->LeftTrigger() > 0.5) {
@@ -558,7 +575,9 @@ private:
 			agitator->Set(0);
 			SmartDashboard::PutString("agitator string", "it is not working");
 		}
+
 		SmartDashboard::PutNumber("agitator", agitator->Get());
+
 		shooter->update();
 
 	}
