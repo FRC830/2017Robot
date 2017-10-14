@@ -21,6 +21,7 @@
 #include "Shooter.h"
 //#include "input/Toggle.h"
 #include "Toggle.h"
+#include "Intake.h"
 
 using namespace Lib830;
 
@@ -79,6 +80,8 @@ private:
 	Shooter * shooter;
 
 	Spark *agitator;
+
+	Intake *intake;
 
 
 
@@ -195,10 +198,13 @@ private:
 		SmartDashboard::PutNumber("revolutions",65);
 
 		shooter = new Shooter(
-				new VictorSP(INTAKE_PWM),
 				new VictorSP(SHOOTER_PWM),
-				//new Spark(BALL_OUTPUTPWM),
 				new LineBreakCounter(COUNTER_DIO)
+		);
+
+
+		intake = new Intake (
+			new VictorSP(INTAKE_PWM)
 		);
 
 		agitator = new Spark(BALL_OUTPUTPWM);
@@ -544,12 +550,12 @@ private:
 
 		//Pull balls in with copilot A
 		if (copilot->ButtonState(GamepadF310::BUTTON_A)) {
-			shooter->intakeBall();
+			intake->intakeBall();
 		}
 
 		//Push balls out with copilot B
 		if (copilot->ButtonState(GamepadF310::BUTTON_B)) {
-			shooter->outputBall();
+			intake->outputBall();
 		}
 
 		//Dpad up toggles shooter
@@ -569,6 +575,7 @@ private:
 		//X turns on input, shooter, and agitator
 		if (copilot->ButtonState(GamepadF310::BUTTON_X)){
 			shooter->shoot();
+			intake->intakeBall();
 			agitator->Set(0.5);
 			SmartDashboard::PutString("agitator string", "it should be working");
 		} else if (copilot->LeftTrigger() < 0.5) {
@@ -579,6 +586,7 @@ private:
 		SmartDashboard::PutNumber("agitator", agitator->Get());
 
 		shooter->update();
+		intake->update();
 
 	}
 	void TestPeriodic()

@@ -12,41 +12,27 @@
 
 class Shooter {
 public:
-	Shooter(VictorSP * intakeMotor, VictorSP* shooterMotor,/* Spark *ball_output,*/ LineBreakCounter* shoot_speed /*probably some sort of swtich*/);
-	VictorSP * intake;
+	Shooter(VictorSP* shooterMotor, LineBreakCounter* shoot_speed);
 	VictorSP * shooter;
-	//Spark *ballOutput;
 	LineBreakCounter * shootSpeed;
 	PIDController * speedPID;
 	float p,i,d;
 	//float speed;
 
-	enum State {NOTHING, TOINTAKE, SHOOTING, MANUAL_SHOOT, OUTPUT, INTAKE_OUTPUT, OUTPUTBALL};
-
-	//bool hasBall();
+	enum State {NOTHING, SHOOTING, MANUAL_SHOOT};
 
 	void shoot();
-	void intakeBall();
-	void stopIntake();
 	void stopShoot();
 	void update();
-	//void agitator();
 	void manualShoot();
-	void stopBallOutPut();
-	void intakeOverRide();
-	void agitatorIntake();
-	void outputBall();
-
-	void disablePID();
 	void setPIDValues(float p, float i, float d);
 
-	Timer *shooterTimer;
 	State state;
 
 	virtual ~Shooter();
 private:
-	int numberOfBalls = 0;
-	bool has_intaken = false;
+	void disablePID();
+
 };
 
 #endif /* SHOOTER_H_ */
