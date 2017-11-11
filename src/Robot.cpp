@@ -74,7 +74,7 @@ private:
 	DigitalOutput * climbingSwitch;
 
 	SendableChooser<AutoMode*> *chooser;
-	static const int TICKS_TO_ACCEL = 10;
+	static const int TICKS_TO_ACCEL = 8;
 
 	Shooter * shooter;
 
@@ -319,7 +319,7 @@ private:
 				straight_time = 2.8;
 			}
 			if (time < straight_time) {
-				speed = 0.3;
+				speed = 0.6;
 				//arcadeDrive(speed, turn);
 			}
 			else if (time >= straight_time && time < straight_time + 5) {
@@ -477,10 +477,10 @@ private:
 		}
 
 
-		double bVoltage = DriverStation::GetInstance().GetBatteryVoltage();
+		/*double bVoltage = DriverStation::GetInstance().GetBatteryVoltage();
 		if (bVoltage < 8.0) {
 			targetSpeed = targetSpeed/2;
-		}
+		}*/
 
 		float speed = accel(previousSpeed, targetSpeed, TICKS_TO_ACCEL);
 		previousSpeed = speed;
